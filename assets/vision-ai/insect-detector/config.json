@@ -1,0 +1,21 @@
+{
+  "model_type": "field-onnx",
+  "vision": {
+    "size": 640,
+    "mean": [
+      0,
+      0,
+      0
+    ],
+    "std": [
+      1,
+      1,
+      1
+    ],
+    "letterbox": true,
+    "scoreType": "logits",
+    "classes": 1,
+    "output": "output"
+  },
+  "id2label": {}
+}

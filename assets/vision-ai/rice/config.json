@@ -1,0 +1,83 @@
+{
+  "arch": "convnext_small",
+  "classes": [
+    "Bacterial_blight",
+    "Bacterial_leaf_streak",
+    "Bacterial_panicle_blight",
+    "Blast",
+    "Brown_spot",
+    "Dead_heart",
+    "Downy_mildew",
+    "Healthy",
+    "Hispa",
+    "Leaf_scald",
+    "Narrow_brown_leaf_spot",
+    "Neck_blast",
+    "Sheath_blight",
+    "Tungro"
+  ],
+  "image_size": 224,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "kind": "disease",
+  "labels": [
+    "Bacterial Blight",
+    "Bacterial Leaf Streak",
+    "Bacterial Panicle Blight",
+    "Blast",
+    "Brown Spot",
+    "Dead Heart",
+    "Downy Mildew",
+    "Healthy",
+    "Hispa",
+    "Leaf Scald",
+    "Narrow Brown Leaf Spot",
+    "Neck Blast",
+    "Sheath Blight",
+    "Tungro"
+  ],
+  "accuracy": 0.9354,
+  "macro_f1": 0.9395,
+  "test_images": 1579,
+  "model_type": "field-onnx",
+  "id2label": {
+    "0": "Bacterial_blight",
+    "1": "Bacterial_leaf_streak",
+    "2": "Bacterial_panicle_blight",
+    "3": "Blast",
+    "4": "Brown_spot",
+    "5": "Dead_heart",
+    "6": "Downy_mildew",
+    "7": "Healthy",
+    "8": "Hispa",
+    "9": "Leaf_scald",
+    "10": "Narrow_brown_leaf_spot",
+    "11": "Neck_blast",
+    "12": "Sheath_blight",
+    "13": "Tungro"
+  },
+  "vision": {
+    "size": 224,
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "classes": 14,
+    "scoreType": "logits",
+    "input": "pixel_values"
+  }
+}

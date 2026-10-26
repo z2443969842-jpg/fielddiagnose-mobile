@@ -1,0 +1,26 @@
+{
+  "model_type": "field-onnx",
+  "id2label": {
+    "0": "Not Leaf",
+    "1": "Early Spot",
+    "2": "Late Spot",
+    "3": "Rust",
+    "4": "Normal"
+  },
+  "vision": {
+    "size": 256,
+    "mean": [
+      0,
+      0,
+      0
+    ],
+    "std": [
+      1,
+      1,
+      1
+    ],
+    "classes": 5,
+    "scoreType": "probabilities",
+    "input": "pixel_values"
+  }
+}

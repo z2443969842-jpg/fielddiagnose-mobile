@@ -1,0 +1,10 @@
+{
+  "id": "peanut",
+  "repo": "AbhimanueR/Peanut-Leaf-Disease-Detection",
+  "revision": "6f5e5568f79f02b3bc2c0efc182d6fb4e6c99950",
+  "prefix": "model/",
+  "weight": "model_6.h5",
+  "bytes": 157664152,
+  "conversion": "exact FP16 storage with FP32 Cast; other weights unchanged",
+  "limitations": "Training-directory label order not published; use author notebook/test order. Source uses RGB training; buggy BGR/string-max example corrected. Experimental."
+}

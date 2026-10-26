@@ -1,0 +1,42 @@
+{
+  "model_type": "field-onnx",
+  "id2label": {
+    "0": "Bệnh Bạc lá (Bacterial leaf blight)",
+    "1": "Bệnh Cháy lá ( Leaf scald )",
+    "2": "Bệnh Gạch Nâu ( Narrow Brown Spot )",
+    "3": "Bệnh Than Vàng ( False Smut )",
+    "4": "Bệnh lúa von (lúa đực) (Rice bakanae disease)",
+    "5": "Bệnh Đạo ôn lá và cổ bông (Rice leaf and neck blast)",
+    "6": "Bệnh Đốm Nâu ( Brown spot )",
+    "7": "Bệnh Đốm Vằn ( Khô vằn ) ( Sheath Blight )",
+    "8": "Bọ trĩ ( Thrips )",
+    "9": "Healthy",
+    "10": "K",
+    "11": "N",
+    "12": "P",
+    "13": "Rầy Nâu (Brown Plant Hopper)",
+    "14": "Sâu cuốn lá lớn ( Rice skipper)",
+    "15": "Sâu cuốn lá nhỏ ( Rice leaf folder)",
+    "16": "Sâu gai ( Hispa )",
+    "17": "Sâu năn ( Muỗi hành )(Rice Gall Midge)",
+    "18": "Sâu đục thân (Rice yellow stem borer)",
+    "19": "Sâu đục thân (Sọc nâu )( Chilo suppressalis )",
+    "20": "Tungro virus"
+  },
+  "vision": {
+    "size": 224,
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "classes": 21,
+    "scoreType": "logits",
+    "input": "pixel_values"
+  }
+}

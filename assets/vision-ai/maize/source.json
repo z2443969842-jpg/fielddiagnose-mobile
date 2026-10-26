@@ -1,0 +1,10 @@
+{
+  "id": "maize",
+  "repo": "ixrbhii/multicrop-disease-models",
+  "revision": "ac1536cdd3290ba5ab3b6d9c8149638500434e52",
+  "prefix": "Maize/",
+  "weight": "model.safetensors",
+  "bytes": 98960126,
+  "conversion": "exact FP16 storage with FP32 Cast; other weights unchanged",
+  "limitations": "Author CC BY4; LeafNet and own photos per author. Exported toONNX without weight value changes. No local field validation."
+}

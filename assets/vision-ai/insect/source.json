@@ -1,0 +1,9 @@
+{
+  "author": "quarrying",
+  "original": "https://github.com/quarrying/quarrying-insect-id",
+  "originalRevision": "ccfeecdb87d96adf28e20ebba45e02ff596654c4",
+  "mirror": "https://huggingface.co/Genius-Society/insecta",
+  "revision": "d913b2f4308e291a5fe4af2ac5e4194b7781c2b8",
+  "changes": "Only ONNX input renamed to pixel_values; weights unchanged",
+  "limitations": "2037 taxa include order/family/genus/species. Training-data licenses not fully disclosed. No validated local field accuracy or life-stage coverage."
+}

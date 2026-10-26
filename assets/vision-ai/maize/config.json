@@ -1,0 +1,74 @@
+{
+  "arch": "convnext_small",
+  "classes": [
+    "Common_rust",
+    "Fall_armyworm",
+    "Grasshopper_damage",
+    "Gray_leaf_spot",
+    "Healthy",
+    "Holcus_leaf_spot",
+    "Leaf_beetle",
+    "Maize_lethal_necrosis",
+    "Maize_streak_virus",
+    "Northern_leaf_blight",
+    "Smut"
+  ],
+  "image_size": 224,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "kind": "disease",
+  "labels": [
+    "Common Rust",
+    "Fall Armyworm",
+    "Grasshopper Damage",
+    "Gray Leaf Spot",
+    "Healthy",
+    "Holcus Leaf Spot",
+    "Leaf Beetle",
+    "Lethal Necrosis",
+    "Streak Virus",
+    "Northern Leaf Blight",
+    "Smut"
+  ],
+  "accuracy": 0.929,
+  "macro_f1": 0.9363,
+  "test_images": 1281,
+  "model_type": "field-onnx",
+  "id2label": {
+    "0": "Common_rust",
+    "1": "Fall_armyworm",
+    "2": "Grasshopper_damage",
+    "3": "Gray_leaf_spot",
+    "4": "Healthy",
+    "5": "Holcus_leaf_spot",
+    "6": "Leaf_beetle",
+    "7": "Maize_lethal_necrosis",
+    "8": "Maize_streak_virus",
+    "9": "Northern_leaf_blight",
+    "10": "Smut"
+  },
+  "vision": {
+    "size": 224,
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "classes": 11,
+    "scoreType": "logits",
+    "input": "pixel_values"
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "version": "vision-20261016-v2",
+  "files": [
+    "runtime/vision-worker.js",
+    "runtime/transformers.min.js",
+    "runtime/ort-wasm-simd-threaded.jsep.mjs",
+    "runtime/ort-wasm-simd-threaded.jsep.wasm",
+    "leaf/config.json",
+    "leaf/preprocessor_config.json",
+    "leaf/crop_leaf_diseases_vit.onnx",
+    "leaf/README.md",
+    "leaf/ONNX-README.md",
+    "soy/config.json",
+    "soy/model.onnx",
+    "soy/README.md",
+    "vlm/config.json",
+    "vlm/preprocessor_config.json",
+    "vlm/processor_config.json",
+    "vlm/tokenizer.json",
+    "vlm/tokenizer_config.json",
+    "vlm/generation_config.json",
+    "vlm/special_tokens_map.json",
+    "vlm/chat_template.json",
+    "vlm/README.md",
+    "vlm/onnx/embed_tokens_quantized.onnx",
+    "vlm/onnx/vision_encoder_quantized.onnx",
+    "vlm/onnx/decoder_model_merged_quantized.onnx",
+    "rice/config.json",
+    "rice/model.onnx",
+    "rice/README.md",
+    "rice/source.json",
+    "maize/config.json",
+    "maize/model.onnx",
+    "maize/README.md",
+    "maize/source.json",
+    "cotton/config.json",
+    "cotton/model.onnx",
+    "cotton/README.md",
+    "cotton/source.json",
+    "peanut/config.json",
+    "peanut/model.onnx",
+    "peanut/README.md",
+    "peanut/source.json",
+    "rice21/config.json",
+    "rice21/model.onnx",
+    "rice21/README.md",
+    "rice21/source.json",
+    "maize-nutrient/config.json",
+    "maize-nutrient/model.onnx",
+    "maize-nutrient/README.md",
+    "maize-nutrient/source.json",
+    "insect/config.json",
+    "insect/model.onnx",
+    "insect/source.json",
+    "insect/LICENSE",
+    "insect-detector/config.json",
+    "insect-detector/model.onnx",
+    "insect-detector/source.json",
+    "insect-detector/LICENSE",
+    "retrieval/config.json",
+    "retrieval/preprocessor_config.json",
+    "retrieval/onnx/model_quantized.onnx",
+    "retrieval/source.json",
+    "retrieval/README.md",
+    "retrieval/LICENSE"
+  ],
+  "leaf": {
+    "source": "https://huggingface.co/wambugu71/crop_leaf_diseases_vit_onnx",
+    "revision": "72c3499e00355c651b534bd5eb8b90f35f015da4",
+    "license": "MIT (ONNX repository metadata); source card contains Apache-2.0 prose; training data partly undisclosed",
+    "classes": 13
+  },
+  "soy": {
+    "source": "https://huggingface.co/ixrbhii/soybean-disease-convnext",
+    "revision": "dd564d089f8a95fa046a5a6fc4a39cb0f5bf0c26",
+    "license": "CC BY 4.0",
+    "classes": 6
+  },
+  "vlm": {
+    "source": "https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct",
+    "revision": "7e3e67edbbed1bf9888184d9df282b700a323964",
+    "license": "Apache 2.0",
+    "scope": "General visual observations; not an agronomic disease classifier"
+  },
+  "runtime": {
+    "source": "https://github.com/huggingface/transformers.js",
+    "version": "3.8.1",
+    "license": "Apache 2.0; ONNX Runtime MIT"
+  },
+  "limitations": [
+    "Not an expert diagnosis",
+    "No verified local field accuracy",
+    "Nutrient elements cannot be confirmed from images alone"
+  ],
+  "expansion": {
+    "rice": {
+      "id": "rice",
+      "repo": "ixrbhii/multicrop-disease-models",
+      "revision": "ac1536cdd3290ba5ab3b6d9c8149638500434e52",
+      "prefix": "Rice/",
+      "weight": "model.safetensors",
+      "bytes": 98964740,
+      "conversion": "exact FP16 storage with FP32 Cast; other weights unchanged",
+      "limitations": "Author CC BY4; LeafNet and own photos per author. Exported toONNX without weight value changes. No local field validation."
+    },
+    "maize": {
+      "id": "maize",
+      "repo": "ixrbhii/multicrop-disease-models",
+      "revision": "ac1536cdd3290ba5ab3b6d9c8149638500434e52",
+      "prefix": "Maize/",
+      "weight": "model.safetensors",
+      "bytes": 98960126,
+      "conversion": "exact FP16 storage with FP32 Cast; other weights unchanged",
+      "limitations": "Author CC BY4; LeafNet and own photos per author. Exported toONNX without weight value changes. No local field validation."
+    },
+    "cotton": {
+      "id": "cotton",
+      "repo": "YaswanthReddy23/ViT_Cotton",
+      "revision": "18225a2e38b9c66ef3035b35a43cff316ef3cd0d",
+      "prefix": "",
+      "weight": "model.safetensors",
+      "bytes": 343239356,
+      "conversion": "dynamic INT8 constant MatMul weights; convolution and other ops FP32",
+      "limitations": "Training dataset unknown in author card. DynamicINT8 MatMul; not independently field validated."
+    },
+    "peanut": {
+      "id": "peanut",
+      "repo": "AbhimanueR/Peanut-Leaf-Disease-Detection",
+      "revision": "6f5e5568f79f02b3bc2c0efc182d6fb4e6c99950",
+      "prefix": "model/",
+      "weight": "model_6.h5",
+      "bytes": 157664152,
+      "conversion": "exact FP16 storage with FP32 Cast; other weights unchanged",
+      "limitations": "Training-directory label order not published; use author notebook/test order. Source uses RGB training; buggy BGR/string-max example corrected. Experimental."
+    },
+    "rice21": {
+      "id": "rice21",
+      "repo": "https://github.com/alberttrann/DiseaseDetector",
+      "revision": "22954ed886d554be2bef40e3f72a2627322d8f62",
+      "weights": "https://drive.google.com/uc?export=download&id=195SLKyXh2c9j10DMns_x7Efsm6bzD_OU",
+      "license": "Weights/source repository has no explicit license. Dataset card Apache2 is not a weight license.",
+      "scope": "Experimental21 outputs including N/P/K; no independent field validation."
+    },
+    "maize-nutrient": {
+      "id": "maize-nutrient",
+      "repo": "https://huggingface.co/Naren1704/maize_nutrient-deficiency_rgbdataset_dinov2_fullft",
+      "revision": "b4287f4f44ce3cf22d105f4895b5346257dc0c42",
+      "source": "https://github.com/Naren1704/PhenoAssistant/tree/b26b4f01519af8273787101f0bb404c85f45e0a4",
+      "license": "Inference source MIT; model-card license unspecified; author Kaggle training data license Unknown.",
+      "scope": "Experimental healthy/N/P/K/Zn/severe deficiency candidates. Not laboratory confirmation."
+    },
+    "insect": {
+      "author": "quarrying",
+      "original": "https://github.com/quarrying/quarrying-insect-id",
+      "originalRevision": "ccfeecdb87d96adf28e20ebba45e02ff596654c4",
+      "mirror": "https://huggingface.co/Genius-Society/insecta",
+      "revision": "d913b2f4308e291a5fe4af2ac5e4194b7781c2b8",
+      "changes": "Only ONNX input renamed to pixel_values; weights unchanged",
+      "limitations": "2037 taxa include order/family/genus/species. Training-data licenses not fully disclosed. No validated local field accuracy or life-stage coverage."
+    },
+    "insect-detector": {
+      "author": "quarrying",
+      "original": "https://github.com/quarrying/quarrying-insect-id",
+      "originalRevision": "ccfeecdb87d96adf28e20ebba45e02ff596654c4",
+      "mirror": "https://huggingface.co/Genius-Society/insecta",
+      "revision": "d913b2f4308e291a5fe4af2ac5e4194b7781c2b8",
+      "changes": "Only ONNX input renamed to pixel_values; weights unchanged",
+      "limitations": "2037 taxa include order/family/genus/species. Training-data licenses not fully disclosed. No validated local field accuracy or life-stage coverage."
+    }
+  },
+  "scope": "Seven crops have leaf classifiers; rice/maize experimental nutrient candidates; insect detection and 2037 mixed-rank arthropod taxa. Sugar beet disease classifier missing. Not 2037 agricultural pest species.",
+  "retrieval": {
+    "modelId": "dinov2-small-q8-cls224-v1",
+    "repository": "https://huggingface.co/Xenova/dinov2-small",
+    "revision": "c2bb04a51fab207c420665f1946016107bffc701",
+    "baseModel": "facebook/dinov2-small",
+    "license": "Apache-2.0",
+    "preprocessing": "RGB; bilinear resize 224x224 (stretch); ImageNet mean/std; CLS token; L2 normalization",
+    "size": 224,
+    "dimension": 384,
+    "modelSha256": "3afdc8bc63b50558d6e5770f5b799bb82455c2311183a2de43803f343a29d917",
+    "note": "General visual similarity baseline, not a disease classifier. Fixed manual preprocessing overrides upstream default resize/crop.",
+    "files": [
+      {
+        "file": "field-doctor\\assets\\vision-ai\\retrieval\\config.json",
+        "sha256": "471007e1c59df520030a2690998f4e0ba5d810bc4f959d1984f630d198faa07e",
+        "bytes": 899
+      },
+      {
+        "file": "field-doctor\\assets\\vision-ai\\retrieval\\preprocessor_config.json",
+        "sha256": "14e780d86fa1861f8751f868d7f45425b5feb55c38ca26f152ca5097ab30f828",
+        "bytes": 436
+      },
+      {
+        "file": "field-doctor\\assets\\vision-ai\\retrieval\\README.md",
+        "sha256": "ea1afddaff5c0cd2ede615ebea4935e9a78d7b39f1e0182dc05667b2e94d6c3e",
+        "bytes": 1177
+      },
+      {
+        "file": "field-doctor\\assets\\vision-ai\\retrieval\\onnx\\model_quantized.onnx",
+        "sha256": "3afdc8bc63b50558d6e5770f5b799bb82455c2311183a2de43803f343a29d917",
+        "bytes": 24451943
+      },
+      {
+        "file": "field-doctor\\assets\\vision-ai\\retrieval\\LICENSE",
+        "sha256": "600cc67cc4cb2f5ea317dcfc687ad1c74dc4bec8782bbe9db0afd83513b935b7",
+        "bytes": 11359
+      }
+    ]
+  }
+}

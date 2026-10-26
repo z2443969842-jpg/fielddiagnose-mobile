@@ -1,0 +1,10 @@
+{
+  "id": "cotton",
+  "repo": "YaswanthReddy23/ViT_Cotton",
+  "revision": "18225a2e38b9c66ef3035b35a43cff316ef3cd0d",
+  "prefix": "",
+  "weight": "model.safetensors",
+  "bytes": 343239356,
+  "conversion": "dynamic INT8 constant MatMul weights; convolution and other ops FP32",
+  "limitations": "Training dataset unknown in author card. DynamicINT8 MatMul; not independently field validated."
+}

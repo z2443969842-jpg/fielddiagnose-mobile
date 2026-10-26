@@ -1,0 +1,59 @@
+{
+  "_name_or_path": "google/vit-base-patch16-224-in21k",
+  "architectures": [
+    "ViTForImageClassification"
+  ],
+  "attention_probs_dropout_prob": 0.0,
+  "encoder_stride": 16,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.0,
+  "hidden_size": 768,
+  "id2label": {
+    "0": "Bacterial Blight",
+    "1": "Curl Virus",
+    "2": "Healthy Leaf",
+    "3": "Herbicide Growth Damage",
+    "4": "Leaf Hopper Jassids",
+    "5": "Leaf Redding",
+    "6": "Leaf Variegation"
+  },
+  "image_size": 224,
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "label2id": {
+    "Bacterial Blight": "0",
+    "Curl Virus": "1",
+    "Healthy Leaf": "2",
+    "Herbicide Growth Damage": "3",
+    "Leaf Hopper Jassids": "4",
+    "Leaf Redding": "5",
+    "Leaf Variegation": "6"
+  },
+  "layer_norm_eps": 1e-12,
+  "model_type": "vit",
+  "num_attention_heads": 12,
+  "num_channels": 3,
+  "num_hidden_layers": 12,
+  "patch_size": 16,
+  "problem_type": "single_label_classification",
+  "qkv_bias": true,
+  "torch_dtype": "float32",
+  "transformers_version": "4.47.1",
+  "attn_implementation": null,
+  "vision": {
+    "size": 224,
+    "mean": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "std": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "classes": 7,
+    "scoreType": "logits",
+    "input": "pixel_values"
+  }
+}

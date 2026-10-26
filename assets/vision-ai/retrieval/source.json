@@ -1,0 +1,39 @@
+{
+  "modelId": "dinov2-small-q8-cls224-v1",
+  "repository": "https://huggingface.co/Xenova/dinov2-small",
+  "revision": "c2bb04a51fab207c420665f1946016107bffc701",
+  "baseModel": "facebook/dinov2-small",
+  "license": "Apache-2.0",
+  "preprocessing": "RGB; bilinear resize 224x224 (stretch); ImageNet mean/std; CLS token; L2 normalization",
+  "size": 224,
+  "dimension": 384,
+  "modelSha256": "3afdc8bc63b50558d6e5770f5b799bb82455c2311183a2de43803f343a29d917",
+  "note": "General visual similarity baseline, not a disease classifier. Fixed manual preprocessing overrides upstream default resize/crop.",
+  "files": [
+    {
+      "file": "field-doctor\\assets\\vision-ai\\retrieval\\config.json",
+      "sha256": "471007e1c59df520030a2690998f4e0ba5d810bc4f959d1984f630d198faa07e",
+      "bytes": 899
+    },
+    {
+      "file": "field-doctor\\assets\\vision-ai\\retrieval\\preprocessor_config.json",
+      "sha256": "14e780d86fa1861f8751f868d7f45425b5feb55c38ca26f152ca5097ab30f828",
+      "bytes": 436
+    },
+    {
+      "file": "field-doctor\\assets\\vision-ai\\retrieval\\README.md",
+      "sha256": "ea1afddaff5c0cd2ede615ebea4935e9a78d7b39f1e0182dc05667b2e94d6c3e",
+      "bytes": 1177
+    },
+    {
+      "file": "field-doctor\\assets\\vision-ai\\retrieval\\onnx\\model_quantized.onnx",
+      "sha256": "3afdc8bc63b50558d6e5770f5b799bb82455c2311183a2de43803f343a29d917",
+      "bytes": 24451943
+    },
+    {
+      "file": "field-doctor\\assets\\vision-ai\\retrieval\\LICENSE",
+      "sha256": "600cc67cc4cb2f5ea317dcfc687ad1c74dc4bec8782bbe9db0afd83513b935b7",
+      "bytes": 11359
+    }
+  ]
+}

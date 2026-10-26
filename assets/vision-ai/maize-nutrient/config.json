@@ -1,0 +1,38 @@
+{
+  "model": "dinov2_vits14",
+  "embed_dim": 384,
+  "num_classes": 6,
+  "label2id": {
+    "healthy": 0,
+    "nitrogen_deficiency": 1,
+    "phosphorus_deficiency": 2,
+    "potassium_deficiency": 3,
+    "zinc_deficiency": 4,
+    "severe_deficiency": 5
+  },
+  "id2label": {
+    "0": "healthy",
+    "1": "nitrogen_deficiency",
+    "2": "phosphorus_deficiency",
+    "3": "potassium_deficiency",
+    "4": "zinc_deficiency",
+    "5": "severe_deficiency"
+  },
+  "model_type": "field-onnx",
+  "vision": {
+    "size": 224,
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "classes": 6,
+    "scoreType": "logits",
+    "input": "pixel_values"
+  }
+}

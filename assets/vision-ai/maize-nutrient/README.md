@@ -1,0 +1,13 @@
+# maize-nutrient
+
+id: maize-nutrient
+
+repo: https://huggingface.co/Naren1704/maize_nutrient-deficiency_rgbdataset_dinov2_fullft
+
+revision: b4287f4f44ce3cf22d105f4895b5346257dc0c42
+
+source: https://github.com/Naren1704/PhenoAssistant/tree/b26b4f01519af8273787101f0bb404c85f45e0a4
+
+license: Inference source MIT; model-card license unspecified; author Kaggle training data license Unknown.
+
+scope: Experimental healthy/N/P/K/Zn/severe deficiency candidates. Not laboratory confirmation.
