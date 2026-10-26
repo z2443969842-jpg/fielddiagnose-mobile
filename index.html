@@ -7444,12 +7444,29 @@ const LocalVision=(()=>{
 </script><script>/* A worker keeps CPU-only inference off the page's input/scroll thread. */
 const VisionClient=(()=>{
  'use strict';
- let worker,promise,sequence=0,generation=0,workerEpoch=0;
+ let worker,promise,sequence=0,generation=0,workerEpoch=0,loadingAssets=0;
  const jobs=new Map();
+ function hosted(){return typeof window!=='undefined'&&window.FieldHostedMobile===true;}
+ function armJob(id){
+  const job=jobs.get(id);if(!job)return;clearTimeout(job.timer);
+  const downloading=hosted()&&loadingAssets>0;
+  job.timer=setTimeout(()=>{
+   if(!jobs.has(id))return;
+   retireWorker(downloading?'图像模型下载等待超时，请检查网络后重试；也可选择轻量演示配置。':'本地AI分析超时；已保留完成结果，可尝试更清晰的单张照片或改用专项模型。',id);
+  },downloading?900000:180000);
+ }
+ function armJobs(){for(const id of jobs.keys())armJob(id);}
+ async function readBytes(name){
+  if(!hosted())return LocalVision.bytes(name);
+  // First-use network transfer has its own bounded wait, separate from inference.
+  const epoch=workerEpoch;loadingAssets++;armJobs();
+  try{return await LocalVision.bytes(name);}
+  finally{if(epoch===workerEpoch){loadingAssets--;armJobs();}}
+ }
  async function start(){
-  if(!promise)promise=(async()=>{const token=generation,epoch=workerEpoch,code=await LocalVision.bytes('runtime/vision-worker.js');if(token!==generation||epoch!==workerEpoch)throw Error('本地AI加载已取消');const url=URL.createObjectURL(new Blob([code],{type:'text/javascript'}));worker=new Worker(url);URL.revokeObjectURL(url);const target=worker;
+  if(!promise)promise=(async()=>{const token=generation,epoch=workerEpoch,code=await readBytes('runtime/vision-worker.js');if(token!==generation||epoch!==workerEpoch)throw Error('本地AI加载已取消');const url=URL.createObjectURL(new Blob([code],{type:'text/javascript'}));worker=new Worker(url);URL.revokeObjectURL(url);const target=worker;
    worker.onmessage=async event=>{const message=event.data;
-    if(message.type==='asset'){try{const encoded=LocalVision.packagedAsset(message.name);if(encoded){if(worker===target)target.postMessage({type:'asset-result',id:message.id,encoded});}else{const data=await LocalVision.bytes(message.name);if(worker===target)target.postMessage({type:'asset-result',id:message.id,data},[data.buffer]);}}catch(error){if(worker===target)target.postMessage({type:'asset-result',id:message.id,error:error.message});}return;}
+    if(message.type==='asset'){try{const encoded=LocalVision.packagedAsset(message.name);if(encoded){if(worker===target)target.postMessage({type:'asset-result',id:message.id,encoded});}else{const data=await readBytes(message.name);if(worker===target)target.postMessage({type:'asset-result',id:message.id,data},[data.buffer]);}}catch(error){if(worker===target)target.postMessage({type:'asset-result',id:message.id,error:error.message});}return;}
     if(message.type==='pixels'){try{const data=await LocalVision.pixels(message.request);if(worker===target)target.postMessage({type:'pixels-result',id:message.id,data},[data.data.buffer]);}catch(error){if(worker===target)target.postMessage({type:'pixels-result',id:message.id,error:error.message});}return;}
     const job=jobs.get(message.id);if(!job)return;jobs.delete(message.id);clearTimeout(job.timer);document.dispatchEvent(new CustomEvent('field-vision-busy',{detail:jobs.size>0}));message.error?job.reject(Error(message.error)):job.resolve(message.result);
    };
@@ -7457,16 +7474,12 @@ const VisionClient=(()=>{
   })().catch(error=>{if(promise===loading)promise=null;throw error;});const loading=promise;return promise;
  }
  function run(type,payload){const token=generation,id=++sequence;return new Promise((resolve,reject)=>{
-  const timer=setTimeout(()=>{
-   if(!jobs.has(id))return;
-   retireWorker('本地AI分析超时；已保留完成结果，可尝试更清晰的单张照片或改用专项模型。',id);
-  },180000);
-  jobs.set(id,{resolve,reject,timer});document.dispatchEvent(new CustomEvent('field-vision-busy',{detail:true}));
+  jobs.set(id,{resolve,reject,timer:null});armJob(id);document.dispatchEvent(new CustomEvent('field-vision-busy',{detail:true}));
   start().then(target=>{if(token!==generation||!jobs.has(id))return;target.postMessage({type,id,...payload});}).catch(error=>{
    const job=jobs.get(id);if(!job)return;jobs.delete(id);clearTimeout(job.timer);document.dispatchEvent(new CustomEvent('field-vision-busy',{detail:jobs.size>0}));job.reject(error);
   });
  });}
- function retireWorker(message,timedOutId){workerEpoch++;worker?.terminate();worker=null;promise=null;for(const [id,job] of jobs){clearTimeout(job.timer);job.reject(Error(timedOutId&&id!==timedOutId?'同一工作线程中的其他图像任务已超时，本次任务已中止；可以重新开始。':message));}jobs.clear();document.dispatchEvent(new CustomEvent('field-vision-busy',{detail:false}));}
+ function retireWorker(message,timedOutId){workerEpoch++;loadingAssets=0;worker?.terminate();worker=null;promise=null;for(const [id,job] of jobs){clearTimeout(job.timer);job.reject(Error(timedOutId&&id!==timedOutId?'同一工作线程中的其他图像任务已超时，本次任务已中止；可以重新开始。':message));}jobs.clear();document.dispatchEvent(new CustomEvent('field-vision-busy',{detail:false}));}
  function cancel(message='本次本地AI分析已取消'){generation++;retireWorker(message);}
  async function analyze(images,ctx,mode='auto',experimental=true){
   const token=generation,results=[],insects=[],captions=[],warnings=[],candidates=[],models=VisionCatalog.modelsFor(ctx.crop,experimental),usable=images.filter(it=>it.quality.image_usable&&it.subject!=='未确认');
