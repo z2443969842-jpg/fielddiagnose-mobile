@@ -7459,8 +7459,9 @@ const VisionClient=(()=>{
  async function readBytes(name){
   if(!hosted())return LocalVision.bytes(name);
   // First-use network transfer has its own bounded wait, separate from inference.
-  const epoch=workerEpoch;loadingAssets++;armJobs();
-  try{return await LocalVision.bytes(name);}
+  const epoch=workerEpoch;let loaded=0;loadingAssets++;armJobs();
+  const progress=detail=>{if(epoch===workerEpoch&&Number.isSafeInteger(detail?.loaded)&&detail.loaded>loaded){loaded=detail.loaded;armJobs();}};
+  try{return await(typeof window.__readVisionAsset==='function'?window.__readVisionAsset(name,progress):LocalVision.bytes(name));}
   finally{if(epoch===workerEpoch){loadingAssets--;armJobs();}}
  }
  async function start(){

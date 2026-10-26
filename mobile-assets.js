@@ -71,11 +71,12 @@
     return result;
   }
 
-  window.__readVisionAsset = async function (name) {
+  window.__readVisionAsset = async function (name, onProgress) {
     let loaded = 0, total = 0;
     try {
       const bytes = await readAsset(name, (nextLoaded, nextTotal) => {
         loaded = nextLoaded; total = nextTotal;
+        if (typeof onProgress === 'function') onProgress({ loaded, total });
         progress({ name, loaded, total, done: false });
       });
       progress({ name, loaded, total, done: true });
