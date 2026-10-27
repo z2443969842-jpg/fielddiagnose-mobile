@@ -20,6 +20,92 @@
   const paths={camera:'<path d="M14.5 4h-5L8 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-4.5Z"/><circle cx="12" cy="13" r="4"/>',photo:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5L5 21"/>',work:'<path d="M12 21v-9M12 16C4 16 3 10 3 5c6 0 9 3 9 7M12 12c0-5 3-8 9-8 0 5-1 9-9 9"/>',kb:'<path d="M12 5v16M12 6C9 4 5 4 2 5v14c3-1 7-1 10 1 3-2 7-2 10-1V5c-3-1-7-1-10 1Z"/>',atlas:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1"/><path d="m3 17 5-5 4 4 4-6 5 7"/>',history:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h4"/>',settings:'<circle cx="12" cy="12" r="4"/><path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3Z"/>'};
   return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||paths.work)+'</svg>';
  };
+ // Preserve the original controls and listeners while giving each phone workspace
+ // a short route through its settings, results and detailed data.
+ function enhanceWorkspaces(viewport){
+  const $=selector=>document.querySelector(selector),disclosures=[];
+  const jump=selector=>{
+   const target=$(selector);if(!target||target.closest('[hidden]'))return;
+   for(let parent=target.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;
+   const focus=target.matches('h1,h2,h3')?target:target.querySelector('h2,h3')||target;
+   focus.tabIndex=-1;focus.focus({preventScroll:true});target.scrollIntoView({block:'start',behavior:'instant'});
+  };
+  const disclosure=(node,id,label)=>{
+   if(!node)return;
+   const details=document.createElement('details');details.id=id;details.className='fm-disclosure fm-workspace-disclosure';
+   const summary=document.createElement('summary');summary.textContent=label;node.before(details);details.append(summary,node);disclosures.push(details);return details;
+  };
+  const shortcuts=(view,items)=>{
+   if(!view)return;
+   const nav=document.createElement('nav');nav.className='fm-workspace-nav';nav.setAttribute('aria-label',view.querySelector('h1').textContent+' · 页面导航');
+   for(const [label,selector]of items){
+    const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.fmTarget=selector;button.setAttribute('aria-controls',selector.slice(1));button.addEventListener('click',()=>jump(selector));nav.append(button);
+   }
+   view.querySelector(':scope > :first-child').after(nav);
+   const sync=()=>nav.querySelectorAll('button').forEach(button=>{const target=$(button.dataset.fmTarget);button.disabled=!target||!!target.closest('[hidden]');});
+   const observer=new MutationObserver(sync);view.querySelectorAll('[hidden]').forEach(node=>observer.observe(node,{attributes:true,attributeFilter:['hidden']}));sync();
+  };
+  const scrollHint=(node,text)=>{
+   if(!node)return;
+   const hint=document.createElement('p');hint.className='fm-scroll-hint';hint.textContent=text;node.before(hint);
+  };
+  const growth=$('#view-growth');
+  if(growth){
+   const data=$('#gs-data')?.closest('.card');if(data)data.id='fm-growth-data';
+   shortcuts(growth,[['生长参数','#gs-form'],['情景对比','#gs-output'],['逐日数据','#fm-growth-data']]);
+   disclosure(growth.querySelector(':scope > .gs-notice'),'fm-growth-scope','教学演示 · 非真实产量预测');
+   disclosure($('#gs-form .gs-weather'),'fm-growth-weather','气象调节与 CSV 导入 · 可选');
+   scrollHint($('#gs-data')?.parentElement,'左右滑动查看逐日数据');
+   $('#gs-form')?.addEventListener('submit',()=>{if(viewport.matches&&!$('#gs-output').hidden&&!$('#gs-output').classList.contains('gs-stale'))jump('#gs-output');});
+  }
+  const market=$('#view-market');
+  if(market){
+   const form=market.querySelector('.mk-layout > aside > .mk-card');if(form)form.id='fm-market-parameters';
+   const result=market.querySelector('.mk-result-heading');if(result)result.id='fm-market-results';
+   const quotes=$('#mk-market-summary')?.closest('.mk-card');if(quotes)quotes.id='fm-market-quotes';
+   shortcuts(market,[['地块参数','#fm-market-parameters'],['测算收益','#fm-market-results'],['行情快照','#fm-market-quotes']]);
+   disclosure(market.querySelector(':scope > .mk-notice'),'fm-market-scope','本机试算 · 行情为收录快照');
+   if(form){
+    const fields=document.createElement('div');fields.className='fm-market-fields';const first=form.querySelector('.mk-field');first.before(fields);
+    let group;
+    for(const node of [...form.children]){
+     if(node.classList.contains('mk-form-actions'))break;
+     if(node===fields||node.tagName==='H2')continue;
+     if(node.classList.contains('mk-field')){group=document.createElement('div');group.className='fm-market-field-group';fields.append(group);}
+     if(group)group.append(node);
+    }
+   }
+   $('#mk-calculate')?.addEventListener('click',()=>{if(!viewport.matches)return;const invalid=market.querySelector('input[aria-invalid=true]');if(invalid){invalid.focus();return;}jump('#fm-market-results');});
+   market.querySelectorAll('.mk-chart-scroll,.mk-table-scroll').forEach(node=>scrollHint(node,node.classList.contains('mk-chart-scroll')?'左右滑动比较八种作物':'左右滑动查看完整指标'));
+  }
+  const weather=$('#view-weather');
+  if(weather){
+   const selection=$('#wx-fields')?.closest('.wx-card');if(selection)selection.id='fm-weather-fields';
+   const trend=weather.querySelector('.wx-trend');if(trend)trend.id='fm-weather-trend';
+   const region=$('#wx-map')?.closest('.wx-card');if(region)region.id='fm-weather-region';
+   shortcuts(weather,[['选择地块','#fm-weather-fields'],['气象趋势','#fm-weather-trend'],['区域对比','#fm-weather-region']]);
+   disclosure(weather.querySelector(':scope > .wx-source-note'),'fm-weather-scope','教学气象 · 非真实天气预报');
+   const transfer=disclosure(weather.querySelector('.wx-heading-actions'),'fm-weather-transfer','共享气象与导入 / 导出');
+   if(transfer)$('#fm-weather-scope')?.after(transfer);
+   const settings=$('#wx-settings')?.closest('.wx-card');
+   // The frozen entry used a separate button to collapse this form. Native
+   // details now owns its visibility, so remove that earlier collapse state.
+   settings?.classList.remove('fm-settings-collapsed');$('#fm-settings-toggle')?.remove();
+   disclosure(settings,'fm-weather-settings','分析窗口与气象调节');
+   scrollHint($('#wx-fields'),'左右滑动选择示例地块');scrollHint($('#wx-outlook'),'左右滑动查看七天 · 点选日期联动趋势');
+   weather.querySelectorAll('.wx-table-scroll').forEach(node=>scrollHint(node,'左右滑动查看完整气象数据'));
+  }
+  // Collapse optional settings only when entering the phone layout. Once there,
+  // native details retain the visitor's own open/closed choices.
+  document.addEventListener('invalid',event=>{
+   if(!viewport.matches||!event.target.closest('#view-growth,#view-market,#view-weather'))return;
+   for(let parent=event.target.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;
+  },true);
+  const place=()=>disclosures.forEach(details=>{
+   if(viewport.matches&&details.contains(document.activeElement))details.querySelector(':scope > summary').focus({preventScroll:true});
+   details.open=!viewport.matches;
+  });place();viewport.addEventListener('change',place);
+ }
  function enhanceUI(attempt=0){
   const $=selector=>document.querySelector(selector),work=$('#view-work'),tabs=$('#tabs');
   if(!work||!tabs||document.body.classList.contains('fm-shell'))return;
@@ -72,6 +158,7 @@
   const viewport=matchMedia('(max-width: 900px)');
   const placeTabs=()=>{if(viewport.matches)document.body.append(tabs);else tabHome.after(tabs);};
   placeTabs();viewport.addEventListener('change',placeTabs);
+  enhanceWorkspaces(viewport);
   const moduleLabels={'gs-diagnose':'病虫诊断','gs-growth':'生长模拟','wx-workspace':'农业气象','mk-workspace':'市场收益'};
   for(const [id,label]of Object.entries(moduleLabels)){const button=$('#'+id);if(button){button.setAttribute('aria-label',button.textContent.trim());button.textContent=label;}}
   const badge=document.createElement('span');badge.className='fm-phone-badge';badge.textContent='田间助手';$('.gs-modulebar > .brand')?.append(badge);
@@ -110,7 +197,7 @@
   };
   document.addEventListener('focusin',syncKeyboard);document.addEventListener('focusout',()=>queueMicrotask(syncKeyboard));viewport.addEventListener('change',syncKeyboard);
   window.visualViewport?.addEventListener('resize',syncKeyboard);window.addEventListener('resize',syncKeyboard);
-  document.documentElement.dataset.mobileUi='20261026';
+  document.documentElement.dataset.mobileUi='20261027';
  }
  document.addEventListener('field-mobile-asset-progress',event=>{
   const state=document.querySelector('#mobile-download-state'),data=event.detail;if(!state||!data)return;
