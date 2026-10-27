@@ -5795,6 +5795,14 @@ const Engine = (function () {
   const FERT_HINT = /施肥|缺肥|底肥|追肥|叶面肥|缺素|营养/;
   const COLD_HINT = /霜|冻|冷|降温/;
 
+  // Versioned pilot: old case snapshots keep their original decision semantics.
+  function normalizeImageEvidence(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || value.version !== 'maize-image-boundary-1' || !['color-heuristic','external-vision'].includes(value.tagSource) || !Array.isArray(value.assessments)) return null;
+    const statuses=['healthy','invalid','crop-mismatch','uncertain','unmapped','disease-hint','pest-hint','phenotype-hint','nutrient-hint'];
+    const assessments=value.assessments.slice(0,30).filter(r=>r&&['leaf','maize','maize-nutrient'].includes(r.model)&&statuses.includes(r.status)&&typeof r.image==='string'&&r.image.length>0&&r.image.length<=1000&&Number.isFinite(r.score)&&r.score>=0&&r.score<=1&&Number.isFinite(r.margin)&&r.margin>=0&&r.margin<=1&&(r.imageHash===undefined||typeof r.imageHash==='string'&&/^[a-f0-9]{64}$/i.test(r.imageHash))).map(r=>({model:r.model,image:r.image,status:r.status,score:r.score,margin:r.margin,...(r.imageHash?{imageHash:r.imageHash.toLowerCase()}:{} )}));
+    return {version:value.version,tagSource:value.tagSource,assessments};
+  }
+
   function hay(entry) {
     return [
       entry.name, (entry.alias || []).join(''), entry.symptomText || '',
@@ -5832,6 +5840,16 @@ const Engine = (function () {
     (ctx.imageTags || []).filter(t=>!state.denied(t)).forEach(t => merge(Lex.asFeature(t, 0.88, '图像')));
     Object.keys(Q).filter(state.denied).forEach(t=>delete Q[t]);
     return Q;
+  }
+
+  function hasObservedFeatures(ctx) {
+    const tentative=/是否|是不是|有没有|有无|能否|会不会|不确定|不清楚|看不清|无法确认|不能确认|怀疑|疑似|可能|假如|如果|[?？]|[吗么呢]\s*$/;
+    const state=featureState(ctx);
+    const observed=[state.description,...(ctx.symptomTags||[])].filter(t=>typeof t==='string').flatMap(t=>t.split(/[，,。；;！!\n]/)).map(t=>t.trim()).filter(t=>t&&!tentative.test(t)&&!/不(?!规则)/.test(t)).map(t=>featureState({userQuestion:t,absentFeatures:state.negative}).description).join('；');
+    // Unlike asFeature(), extract() does not promote an arbitrary tag to evidence.
+    const query=Lex.extract(observed,1,'人工观察');
+    const anatomy=new Set(['叶','茎','根','穗','叶子','叶片','叶片正','背面','叶背','叶鞘','叶尖','叶缘','叶脉','茎秆','茎基部','根部','根系','全株','穗部','果穗','籽粒','初期','后期']);
+    return Object.keys(query).some(feature=>!anatomy.has(feature));
   }
 
   /* 从自由描述里推断作物：用户常忘记选作物，这一句能救回一大截准确率 */
@@ -6078,7 +6096,24 @@ const Engine = (function () {
         if(visual[0].entryId!==fieldLeader)conflicts.push('分类模型与田间观察的首要候选不同；人工观察偏向「'+ranked[0].name+'」，需补充发生分布及鉴别部位照片。');
       }
     }
-    return {policyVersion:INQUIRY_POLICY.version,conflicts,imageGroup:'上传图像线索与分类按相关证据处理；相似检索及知识解释不作为独立评分票数',fieldLeader};
+    let imageLimited=false;
+    const imageEvidence=ctx.crop==='玉米'?ctx.imageEvidence:null;
+    if(imageEvidence){
+      const fieldFeatures=hasObservedFeatures(ctx);
+      const pictures=ctx.images||[],usablePicture=i=>i.quality?.image_usable&&(!i.subject||i.subject==='作物叶片');
+      // The nutrient model's "healthy" class says nothing about leaf diseases.
+      // invalid/mismatch statuses are assigned before the catalog's score gate.
+      const boundaries=imageEvidence.assessments.filter(r=>{
+        const matches=pictures.filter(i=>r.imageHash?typeof i.hash==='string'&&i.hash.toLowerCase()===r.imageHash:i.name===r.image);
+        return r.model!=='maize-nutrient'&&matches.length===1&&usablePicture(matches[0])&&r.score>=.70&&r.margin>=.15&&['healthy','invalid','crop-mismatch'].includes(r.status);
+      });
+      const labels={healthy:'模型仅给出健康观察（不能据此确认健康）',invalid:'模型提示范围外或无效图像', 'crop-mismatch':'模型类别与所选作物不一致'};
+      for(const status of [...new Set(boundaries.map(r=>r.status))])conflicts.push(labels[status]+'，与本次病因推断存在边界冲突；请核对主体、叶片近景和现场症状。');
+      const colorOnly=imageEvidence.tagSource==='color-heuristic'&&!fieldFeatures&&!visual.length;
+      if(colorOnly)conflicts.push('目前只有颜色统计等低特异性线索，缺少可采用的分类候选和人工症状；颜色不能单独确认病斑、霉层或病因，请补充现场观察。');
+      imageLimited=colorOnly||boundaries.length>0&&!fieldFeatures;
+    }
+    return {policyVersion:INQUIRY_POLICY.version,conflicts,imageLimited,imageGroup:'上传图像线索与分类按相关证据处理；相似检索及知识解释不作为独立评分票数',fieldLeader};
   }
   function planInquiry(out,answers={},options={}){
     const policy=INQUIRY_POLICY,strategy=options.strategy||'active',input=out.input||{},used=Object.keys(answers),state=featureState(input);
@@ -6137,7 +6172,7 @@ const Engine = (function () {
     const decision=assessEvidence(ctx,triage);
     const unclearCount=Object.values(ctx.inquiryAnswers||{}).filter(v=>v==='unsure').length;
     if(unclearCount>=INQUIRY_POLICY.maxUnsure)decision.conflicts.push('多项鉴别特征无法观察，本轮停止追问；请补拍或请农技人员现场复核，不能维持高把握判断。');
-    if(!ctx.crop)status='无法判断';
+    if(!ctx.crop||decision.imageLimited)status='无法判断';
     else if(decision.conflicts.length&&status==='较高置信')status='待确认';
 
     /* 置信度三段映射，与状态保持一致，段间不重叠：
@@ -6196,7 +6231,7 @@ const Engine = (function () {
       _scored: scored,
       _alternate_entries: scored.slice(1, 4).filter(x => x.score > 1).map(x => x.entry),
       _gap: +gap.toFixed(2)
-      ,_decision: {...decision,reason:!ctx.crop?'请先确认作物':status==='无法判断'?'候选证据未达到规则门槛':decision.conflicts.length?'证据冲突，需补充调查':'按规则形成候选，仍需现场核对'}
+      ,_decision: {...decision,reason:!ctx.crop?'请先确认作物':decision.imageLimited?'图像边界或颜色线索不足，需补充人工观察':status==='无法判断'?'候选证据未达到规则门槛':decision.conflicts.length?'证据冲突，需补充调查':'按规则形成候选，仍需现场核对'}
     };
   }
 
@@ -6652,6 +6687,8 @@ const Engine = (function () {
       symptomTags: input.symptomTags || [],
       parts: input.parts || [],
       imageTags: input.imageTags || [],
+      images: input.images,
+      imageEvidence: normalizeImageEvidence(input.imageEvidence),
       visualCandidates: Array.isArray(input.visualCandidates)?input.visualCandidates:[],
       absentFeatures: input.absentFeatures || [],
       inquiryAnswers: input.inquiryAnswers&&typeof input.inquiryAnswers==='object'&&!Array.isArray(input.inquiryAnswers)?Object.fromEntries(Object.entries(input.inquiryAnswers).filter(([k,v])=>typeof k==='string'&&['yes','no','unsure'].includes(v)).slice(0,100)):{},
@@ -6858,7 +6895,7 @@ const Engine = (function () {
     return mode === 'scientific' ? renderScientific(diag, ctx) : renderFriendly(diag, ctx);
   }
 
-  return { run: run, scoreEntry: scoreEntry, renderOutput: renderOutput, featureState, planInquiry, inquiryPolicy:INQUIRY_POLICY, KB: KB };
+  return { run: run, scoreEntry: scoreEntry, renderOutput: renderOutput, featureState, hasObservedFeatures, planInquiry, normalizeImageEvidence, inquiryPolicy:INQUIRY_POLICY, KB: KB };
 })();
 </script><script>/* Offline evidence retrieval. Ranking is not a diagnosis or a calibrated probability. */
 const KnowledgeRetrieval = (() => {
@@ -6923,7 +6960,7 @@ const KnowledgeRetrieval = (() => {
 })();
 </script>
 <!-- FIELD_TOOLS_START -->
-<script>window.FieldResearchBuild={"builtAt":"2026-10-24T00:02:12.246Z","sourceSha256":"6b6964b36bda1e1670b7d14e49302e4b27f038a0a3ac2acf608c74e17a2cd50b","visionManifestSha256":"c2ad2ed01d0502a688ee84073aca416e3a90984b3365ab2f742f80242cd7430c"};</script><style>.ft-card{border:1px solid #dce6dd;border-radius:16px;padding:20px;background:#fff;margin:16px 0;min-width:0}.ft-card h3{font-size:17px;margin:0 0 12px;color:#204d35}.ft-card p{line-height:1.7;margin:8px 0}.ft-muted{font-size:12px;color:#66776a;line-height:1.6}.ft-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.ft-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.ft-card label{display:block;margin:10px 0;font-size:13px}.ft-card input:not([type=checkbox]),.ft-card textarea,.ft-card select{width:100%;box-sizing:border-box;font:inherit;padding:10px;border:1px solid #cddbd0;border-radius:10px;background:white;color:#233d2b}.ft-card textarea{min-height:72px;resize:vertical}.ft-card fieldset{border:0;padding:0;margin:12px 0}.ft-card legend{font-weight:600;font-size:14px;line-height:1.6;margin-bottom:8px}.ft-card .btn{min-height:40px;white-space:normal}.ft-card img{width:100%;height:180px;object-fit:contain;background:#f3f6f2;border-radius:10px}.ft-photo{min-width:0}.ft-photo a{color:#276747;overflow-wrap:anywhere}.ft-evidence{padding:12px;border-radius:12px;border:1px solid #e0e9de;margin:10px 0;background:#f8faf7}.ft-excluded{opacity:.65}.ft-warning{color:#805821;background:#fff7e7;padding:12px;border-radius:10px;font-size:13px;line-height:1.7}.ft-output{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.7}.ft-status{font-size:13px;color:#416b4d;line-height:1.7}.ft-case{padding:16px 0;border-top:1px solid #e1e8df}.ft-card summary{cursor:pointer;font-weight:600;line-height:1.7;padding:10px 0;min-height:40px}.ft-card button{transition:transform 120ms cubic-bezier(.23,1,.32,1),background-color 150ms ease}.ft-card button:active{transform:scale(.97)}.ft-card :focus-visible{outline:3px solid #87b899;outline-offset:3px}.ft-card button:disabled{opacity:.5;cursor:wait}.ft-card progress{width:100%;accent-color:#2b7851}.ft-card [hidden]{display:none!important}.ft-card table{width:100%;border-collapse:collapse;font-size:13px}.ft-card th,.ft-card td{padding:8px;text-align:left;border-bottom:1px solid #e2e9df}.ft-card details[open]>.ft-grid{opacity:1;transition:opacity 160ms cubic-bezier(.23,1,.32,1)}@starting-style{.ft-card details[open]>.ft-grid{opacity:0}}@media(hover:hover) and (pointer:fine){.ft-card .btn:hover{background:#edf5ee}}@media(max-width:540px){.ft-grid{grid-template-columns:1fr}.ft-card{padding:16px}.ft-card img{height:160px}}@media(prefers-reduced-motion:reduce){.ft-card button,.ft-card details[open]>.ft-grid{transition:none}.ft-card button:active{transform:none}}.keyboard-input .ft-card button,.keyboard-input .ft-card details[open]>.ft-grid{transition:none}@media print{#ft-questions button,#ft-case-form,#ft-weather,#ft-evidence{display:none}.ft-card{break-inside:avoid}}
+<script>window.FieldResearchBuild={"builtAt":"2026-10-27T01:28:05.906Z","sourceSha256":"7f858ee5fea5249d4d5469dd8b2ee64255913d6624de872d7f326301aff97266","visionManifestSha256":"c2ad2ed01d0502a688ee84073aca416e3a90984b3365ab2f742f80242cd7430c"};</script><style>.ft-card{border:1px solid #dce6dd;border-radius:16px;padding:20px;background:#fff;margin:16px 0;min-width:0}.ft-card h3{font-size:17px;margin:0 0 12px;color:#204d35}.ft-card p{line-height:1.7;margin:8px 0}.ft-muted{font-size:12px;color:#66776a;line-height:1.6}.ft-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.ft-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.ft-card label{display:block;margin:10px 0;font-size:13px}.ft-card input:not([type=checkbox]),.ft-card textarea,.ft-card select{width:100%;box-sizing:border-box;font:inherit;padding:10px;border:1px solid #cddbd0;border-radius:10px;background:white;color:#233d2b}.ft-card textarea{min-height:72px;resize:vertical}.ft-card fieldset{border:0;padding:0;margin:12px 0}.ft-card legend{font-weight:600;font-size:14px;line-height:1.6;margin-bottom:8px}.ft-card .btn{min-height:40px;white-space:normal}.ft-card img{width:100%;height:180px;object-fit:contain;background:#f3f6f2;border-radius:10px}.ft-photo{min-width:0}.ft-photo a{color:#276747;overflow-wrap:anywhere}.ft-evidence{padding:12px;border-radius:12px;border:1px solid #e0e9de;margin:10px 0;background:#f8faf7}.ft-excluded{opacity:.65}.ft-warning{color:#805821;background:#fff7e7;padding:12px;border-radius:10px;font-size:13px;line-height:1.7}.ft-output{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.7}.ft-status{font-size:13px;color:#416b4d;line-height:1.7}.ft-case{padding:16px 0;border-top:1px solid #e1e8df}.ft-card summary{cursor:pointer;font-weight:600;line-height:1.7;padding:10px 0;min-height:40px}.ft-card button{transition:transform 120ms cubic-bezier(.23,1,.32,1),background-color 150ms ease}.ft-card button:active{transform:scale(.97)}.ft-card :focus-visible{outline:3px solid #87b899;outline-offset:3px}.ft-card button:disabled{opacity:.5;cursor:wait}.ft-card progress{width:100%;accent-color:#2b7851}.ft-card [hidden]{display:none!important}.ft-card table{width:100%;border-collapse:collapse;font-size:13px}.ft-card th,.ft-card td{padding:8px;text-align:left;border-bottom:1px solid #e2e9df}.ft-card details[open]>.ft-grid{opacity:1;transition:opacity 160ms cubic-bezier(.23,1,.32,1)}@starting-style{.ft-card details[open]>.ft-grid{opacity:0}}@media(hover:hover) and (pointer:fine){.ft-card .btn:hover{background:#edf5ee}}@media(max-width:540px){.ft-grid{grid-template-columns:1fr}.ft-card{padding:16px}.ft-card img{height:160px}}@media(prefers-reduced-motion:reduce){.ft-card button,.ft-card details[open]>.ft-grid{transition:none}.ft-card button:active{transform:none}}.keyboard-input .ft-card button,.keyboard-input .ft-card details[open]>.ft-grid{transition:none}@media print{#ft-questions button,#ft-case-form,#ft-weather,#ft-evidence{display:none}.ft-card{break-inside:avoid}}
 .ft-insect-frame{position:relative;max-width:400px;margin:12px 0}.ft-card .ft-insect-frame img{display:block;width:100%;height:auto;max-height:none;object-fit:fill}.ft-insect-box{position:absolute;box-sizing:border-box;border:2px solid #d65f15;pointer-events:none;border-radius:4px}.ft-insect-box b{position:absolute;top:0;left:0;color:white;background:#a7420b;min-width:20px;text-align:center;font:600 13px/20px system-ui}
 
 /* Evidence provenance, inquiry and visit comparison. */
@@ -7164,7 +7201,7 @@ const CaseResearch=(()=>{
    if(label.status!=='reviewed'||!label.reviewer.trim()||!label.basis.trim())missing.push('当前分析版本待完成审核');
    if(!['disease','healthy','out-of-scope'].includes(label.kind))missing.push('待核对审核标签类型及知识条目');
    return {id:c.id+'/'+v.id,groupId,split,crop:input.crop,provenance:out.fieldTools?.provenance||null,revisionId:version,readiness:{complete:missing.length===0,missing},
-    imageEvidence:{images:(input.images||[]).map(it=>({name:it.name,hash:typeof it.hash==='string'&&/^[a-f0-9]{64}$/i.test(it.hash)?it.hash.toLowerCase():undefined,width:it.width,height:it.height,quality:it.quality})),imageTags:input.imageTags||[],visualCandidates:input.visualCandidates||[],imageRatio:input.imageRatio||null,imageSummary:input.imageSummary||'',severity:input.severity||'',localModelUsed:input.localModelUsed===true},
+    imageEvidence:{images:(input.images||[]).map(it=>({name:it.name,hash:typeof it.hash==='string'&&/^[a-f0-9]{64}$/i.test(it.hash)?it.hash.toLowerCase():undefined,width:it.width,height:it.height,...(typeof it.subject==='string'?{subject:it.subject}:{}),quality:it.quality})),imageTags:input.imageTags||[],visualCandidates:input.visualCandidates||[],...(input.imageEvidence?{imageEvidence:copy(input.imageEvidence)}:{}),imageRatio:input.imageRatio||null,imageSummary:input.imageSummary||'',severity:input.severity||'',localModelUsed:input.localModelUsed===true},
     fieldEvidence:{userQuestion:input.userQuestion||'',region:input.region||'',growthStage:input.growthStage||'',affectedArea:input.affectedArea||'',parts:input.parts||[],symptomTags:(input.symptomTags||[]).filter(t=>answers[t]!=='yes')},answers:copy(answers),label};
   }))};
  }
@@ -7488,7 +7525,7 @@ const VisionClient=(()=>{
   for(const image of usable){
    if(token!==generation)break;
    const imageResults=[],imageInsects=[];
-   if(image.subject==='作物叶片')for(const model of models){if(token!==generation)break;try{const result=VisionCatalog.assess(await run('classify',{dataURL:image.dataURL,model}),ctx.crop);imageResults.push({...result,image:image.name});}catch(error){warnings.push(image.name+' '+VisionCatalog.modelNames[model]+'未完成：'+error.message);}}
+   if(image.subject==='作物叶片')for(const model of models){if(token!==generation)break;try{const result=VisionCatalog.assess(await run('classify',{dataURL:image.dataURL,model}),ctx.crop);imageResults.push({...result,image:image.name,...(typeof image.hash==='string'&&/^[a-f0-9]{64}$/i.test(image.hash)?{imageHash:image.hash.toLowerCase()}:{})});}catch(error){warnings.push(image.name+' '+VisionCatalog.modelNames[model]+'未完成：'+error.message);}}
    results.push(...imageResults);
    if(token!==generation)break;
    if(image.subject==='虫体')try{
@@ -7929,6 +7966,10 @@ const FieldTools = (() => {
       if(!Array.isArray(pictures)||!pictures.length||pictures.length>3||pictures.some(it=>!it||typeof it.name!=='string'||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(it.dataURL)||!it.quality||typeof it.quality.image_usable!=='boolean'))throw Error('病例照片字段不完整');
       pictures.forEach(validateImageEvidence);
       const input=v.report.input;
+      if(input.imageEvidence!==undefined){
+        const normalized=Engine.normalizeImageEvidence(input.imageEvidence);
+        if(!normalized||input.imageEvidence.assessments.length>30||normalized.assessments.length!==input.imageEvidence.assessments.length)throw Error('病例图像边界证据字段无效');
+      }
       for(const key of ['crop','region','growthStage','affectedArea','userQuestion'])if(input[key]!==undefined&&typeof input[key]!=='string')throw Error('病例输入字段必须为文本');
       for(const key of ['symptomTags','imageTags','parts','absentFeatures'])if(input[key]!==undefined&&(!Array.isArray(input[key])||input[key].some(t=>typeof t!=='string')))throw Error('病例症状字段必须为文本数组');
       const expected=Engine.run(input);
@@ -9988,7 +10029,7 @@ button,[role=button],summary,.tab,.chip{-webkit-touch-callout:none}button,a,[rol
     if (!ctx0.crop) toast('提示：未选择作物会明显降低判断把握');
 
     // 可选：视觉大模型接管质量检查与初诊
-    let apiUsed = false,externalQuality=false,externalTriage=false;
+    let apiUsed = false,externalQuality=false,externalTriage=false,externalSymptomTags=[];
     if (Api.enabled() && !prepared.meta.rulesOnly && !prepared.meta.neural?.cancelled) {
       $('#workbench-progress').textContent='正在请求您配置的外部视觉服务，可点击“取消本次诊断”中断。';
       try {
@@ -10012,6 +10053,7 @@ button,[role=button],summary,.tab,.chip{-webkit-touch-callout:none}button,a,[rol
         if(revision!==runRevision)return;
         if (t) {
           externalTriage=true;
+          externalSymptomTags=t.symptoms||[];
           imgTags = (t.symptoms || []).concat(imgTags);
           severity = t.severity || severity;
           summary = [(t.abnormal_parts || []).join('、') + '：' + (t.symptoms || []).join('、')];
@@ -10038,6 +10080,13 @@ button,[role=button],summary,.tab,.chip{-webkit-touch-callout:none}button,a,[rol
       imageSummary: summary.join(' | ')
     });
     Object.assign(input,{externalQuality,externalTriage,localModelUsed:prepared.imageTags.length>0||input.visualCandidates.length>0});
+    if(ctx0.crop==='玉米')input.imageEvidence={
+      version:'maize-image-boundary-1',
+      tagSource:externalTriage&&Engine.hasObservedFeatures({symptomTags:externalSymptomTags})?'external-vision':'color-heuristic',
+      assessments:prepared.meta.neural?.cancelled||prepared.meta.rulesOnly?[]:(prepared.meta.neural?.results||[])
+        .filter(r=>{const matches=activeImages.filter(image=>r.imageHash?image.hash===r.imageHash:image.name===r.image);return matches.length===1&&matches[0].quality.image_usable;})
+        .map(r=>({model:r.model,image:r.image,status:r.status,score:r.score,margin:r.margin,...(r.imageHash?{imageHash:r.imageHash}:{})}))
+    };
 
     const out = Engine.run(input);
     if(prepared.meta.neural&&(prepared.meta.neural.results.length||prepared.meta.neural.insects?.length||prepared.meta.neural.captions.length)){
