@@ -23,88 +23,126 @@
  // Preserve the original controls and listeners while giving each phone workspace
  // a short route through its settings, results and detailed data.
  function enhanceWorkspaces(viewport){
-  const $=selector=>document.querySelector(selector),disclosures=[];
+  const $=selector=>document.querySelector(selector),disclosures=[],placements=[];
+  const reveal=target=>{for(let node=target;node;node=node.parentElement)if(node.tagName==='DETAILS')node.open=true;};
   const jump=selector=>{
    const target=$(selector);if(!target||target.closest('[hidden]'))return;
-   for(let parent=target.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;
-   const focus=target.matches('h1,h2,h3')?target:target.querySelector('h2,h3')||target;
-   focus.tabIndex=-1;focus.focus({preventScroll:true});target.scrollIntoView({block:'start',behavior:'instant'});
+   reveal(target);
+   const visibleHeading=[...target.querySelectorAll('h2,h3')].find(node=>node.getClientRects().length);
+   const focus=target.tagName==='DETAILS'?target.querySelector('summary'):target.matches('h1,h2,h3')?target:visibleHeading||target;
+   if(focus.tagName!=='SUMMARY')focus.tabIndex=-1;
+   focus.focus({preventScroll:true});target.scrollIntoView({block:'start',behavior:'instant'});
   };
   const disclosure=(node,id,label)=>{
    if(!node)return;
    const details=document.createElement('details');details.id=id;details.className='fm-disclosure fm-workspace-disclosure';
    const summary=document.createElement('summary');summary.textContent=label;node.before(details);details.append(summary,node);disclosures.push(details);return details;
   };
-  const shortcuts=(view,items)=>{
-   if(!view)return;
+  const footer=view=>{const node=document.createElement('section');node.className='fm-workspace-notes';node.setAttribute('aria-label','设置与数据说明');view.append(node);return node;};
+  const moveOnPhone=(node,destination)=>{
+   if(!node||!destination)return;
+   const home=document.createComment('Wide layout position');node.before(home);
+   placements.push(()=>viewport.matches?destination.append(node):home.after(node));
+  };
+  const heading=(view,title,intro,meta)=>{
+   const h=view.querySelector('h1');h.textContent=title;
+   const holder=h.parentElement;const p=holder.querySelector('p');if(p)p.textContent=intro;
+   const note=document.createElement('span');note.className='fm-module-meta';note.textContent=meta;holder.append(note);
+  };
+  const shortcuts=(view,items,current=0)=>{
    const nav=document.createElement('nav');nav.className='fm-workspace-nav';nav.setAttribute('aria-label',view.querySelector('h1').textContent+' · 页面导航');
-   for(const [label,selector]of items){
-    const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.fmTarget=selector;button.setAttribute('aria-controls',selector.slice(1));button.addEventListener('click',()=>jump(selector));nav.append(button);
-   }
-   view.querySelector(':scope > :first-child').after(nav);
+   items.forEach(([label,selector],index)=>{
+    const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.fmTarget=selector;button.setAttribute('aria-controls',selector.slice(1));
+    if(index===current)button.setAttribute('aria-current','location');
+    button.addEventListener('click',()=>{jump(selector);nav.querySelectorAll('button').forEach(b=>b.removeAttribute('aria-current'));button.setAttribute('aria-current','location');});nav.append(button);
+   });
+   view.firstElementChild.after(nav);
    const sync=()=>nav.querySelectorAll('button').forEach(button=>{const target=$(button.dataset.fmTarget);button.disabled=!target||!!target.closest('[hidden]');});
    const observer=new MutationObserver(sync);view.querySelectorAll('[hidden]').forEach(node=>observer.observe(node,{attributes:true,attributeFilter:['hidden']}));sync();
   };
-  const scrollHint=(node,text)=>{
-   if(!node)return;
-   const hint=document.createElement('p');hint.className='fm-scroll-hint';hint.textContent=text;node.before(hint);
-  };
+  const scrollHint=(node,text)=>{if(!node)return;const hint=document.createElement('p');hint.className='fm-scroll-hint';hint.textContent=text;node.before(hint);};
   const growth=$('#view-growth');
   if(growth){
-   const data=$('#gs-data')?.closest('.card');if(data)data.id='fm-growth-data';
+   heading(growth,'生长模拟','比较自然降雨、少雨和补水下的一季生长。','教学模型 · 不预测真实产量');
+   const notes=footer(growth),data=$('#gs-data')?.closest('.card');if(data)data.id='fm-growth-data';
    shortcuts(growth,[['生长参数','#gs-form'],['情景对比','#gs-output'],['逐日数据','#fm-growth-data']]);
-   disclosure(growth.querySelector(':scope > .gs-notice'),'fm-growth-scope','教学演示 · 非真实产量预测');
-   disclosure($('#gs-form .gs-weather'),'fm-growth-weather','气象调节与 CSV 导入 · 可选');
-   scrollHint($('#gs-data')?.parentElement,'左右滑动查看逐日数据');
+   moveOnPhone(disclosure(growth.querySelector(':scope > .gs-notice'),'fm-growth-scope','教学模型与使用范围'),notes);
+   const weather=disclosure($('#gs-form .gs-weather'),'fm-growth-weather','气象设置 · 可选');
+   if(weather){
+    const extra=document.createElement('div');extra.className='fm-growth-extra';
+    for(const node of [$('#gs-seed')?.closest('label'),$('#gs-water-help'),$('#gs-crop-note')])if(node)moveOnPhone(node,extra);
+    weather.append(extra);
+   }
+   growth.querySelectorAll('.gs-fields > label').forEach(label=>{
+    const name=document.createElement('span');name.className='fm-row-label';
+    for(const node of [...label.childNodes])if(node.nodeType===Node.TEXT_NODE)name.append(node);
+    label.prepend(name);if(label.querySelector('input[type=date]'))label.classList.add('fm-date-row');
+   });
+   const run=$('#gs-form .gs-run');if(run){const action=document.createElement('div');action.className='fm-growth-action';run.before(action);action.append(run);}
+   scrollHint($('#gs-data')?.parentElement,'左右滑动查看完整日数据');
    $('#gs-form')?.addEventListener('submit',()=>{if(viewport.matches&&!$('#gs-output').hidden&&!$('#gs-output').classList.contains('gs-stale'))jump('#gs-output');});
   }
   const market=$('#view-market');
   if(market){
-   const form=market.querySelector('.mk-layout > aside > .mk-card');if(form)form.id='fm-market-parameters';
-   const result=market.querySelector('.mk-result-heading');if(result)result.id='fm-market-results';
-   const quotes=$('#mk-market-summary')?.closest('.mk-card');if(quotes)quotes.id='fm-market-quotes';
-   shortcuts(market,[['地块参数','#fm-market-parameters'],['测算收益','#fm-market-results'],['行情快照','#fm-market-quotes']]);
-   disclosure(market.querySelector(':scope > .mk-notice'),'fm-market-scope','本机试算 · 行情为收录快照');
+   heading(market,'市场收益','先看每亩收益，再按自己的成本调整。','收录样本试算 · 行情非实时');
+   const notes=footer(market),form=market.querySelector('.mk-layout > aside > .mk-card'),result=market.querySelector('.mk-result-heading'),quotes=$('#mk-market-summary')?.closest('.mk-card');
+   if(form)form.id='fm-market-parameters';if(result)result.id='fm-market-results';if(quotes)quotes.id='fm-market-quotes';
+   shortcuts(market,[['调整参数','#fm-market-parameters'],['测算收益','#fm-market-results'],['行情快照','#fm-market-quotes']],1);
+   moveOnPhone(disclosure(market.querySelector(':scope > .mk-notice'),'fm-market-scope','试算范围与使用说明'),notes);
+   moveOnPhone(disclosure(market.querySelector('.mk-heading .mk-actions'),'fm-market-transfer','导出测算结果'),notes);
    if(form){
-    const fields=document.createElement('div');fields.className='fm-market-fields';const first=form.querySelector('.mk-field');first.before(fields);
+    const fields=document.createElement('div');fields.className='fm-market-fields';form.querySelector('.mk-field').before(fields);
+    const help=document.createElement('details');help.id='fm-market-help';help.className='fm-disclosure fm-workspace-disclosure fm-parameter-help';
+    const summary=document.createElement('summary');summary.textContent='参数口径与取值范围';help.append(summary);disclosures.push(help);
+    const helpBody=document.createElement('div');helpBody.className='fm-help-body';help.append(helpBody);
     let group;
     for(const node of [...form.children]){
      if(node.classList.contains('mk-form-actions'))break;
      if(node===fields||node.tagName==='H2')continue;
-     if(node.classList.contains('mk-field')){group=document.createElement('div');group.className='fm-market-field-group';fields.append(group);}
-     if(group)group.append(node);
+     if(node.classList.contains('mk-field')){
+      group=document.createElement('div');group.className='fm-market-field-group';fields.append(group);
+      const explain=[...node.querySelectorAll(':scope > small')];
+      if(explain.length){const item=document.createElement('section'),label=document.createElement('strong');label.textContent=node.querySelector(':scope > span')?.childNodes[0]?.textContent||'参数说明';item.append(label,...explain);helpBody.append(item);}
+      group.append(node);
+     }else if(node.tagName==='P')helpBody.append(node);
+     else if(group)group.append(node);
     }
+    form.append(help);
+    const editor=disclosure(form,'fm-market-editor','调整地块与成本');editor.classList.add('fm-market-editor');
+    const context=document.createElement('small');context.id='fm-market-context';editor.querySelector('summary').append(context);
+    const syncContext=()=>{context.textContent=($('#mk-crop').selectedOptions[0]?.textContent||'')+' · '+$('#mk-area').value+' 亩';};
+    const observer=new MutationObserver(syncContext);observer.observe($('#mk-current'),{childList:true,subtree:true,characterData:true});syncContext();
+    $('#mk-calculate')?.addEventListener('click',()=>{
+     if(!viewport.matches)return;const invalid=market.querySelector('input[aria-invalid=true]');if(invalid){reveal(invalid);invalid.focus();return;}
+     if($('#mk-kpis').textContent.includes('待填写'))return;
+     editor.open=false;jump('#fm-market-results');
+    });
+    const quote=$('#mk-quote');if(quote)quote.textContent='填入收录行情';
    }
-   $('#mk-calculate')?.addEventListener('click',()=>{if(!viewport.matches)return;const invalid=market.querySelector('input[aria-invalid=true]');if(invalid){invalid.focus();return;}jump('#fm-market-results');});
    market.querySelectorAll('.mk-chart-scroll,.mk-table-scroll').forEach(node=>scrollHint(node,node.classList.contains('mk-chart-scroll')?'左右滑动比较八种作物':'左右滑动查看完整指标'));
   }
   const weather=$('#view-weather');
   if(weather){
-   const selection=$('#wx-fields')?.closest('.wx-card');if(selection)selection.id='fm-weather-fields';
-   const trend=weather.querySelector('.wx-trend');if(trend)trend.id='fm-weather-trend';
-   const region=$('#wx-map')?.closest('.wx-card');if(region)region.id='fm-weather-region';
+   heading(weather,'农业气象','先选地块，再看温度、降雨和作业关注。','合成气象 · 非真实天气预报');
+   const notes=footer(weather),selection=$('#wx-fields')?.closest('.wx-card'),trend=weather.querySelector('.wx-trend'),region=$('#wx-map')?.closest('.wx-card');
+   if(selection)selection.id='fm-weather-fields';if(trend)trend.id='fm-weather-trend';if(region)region.id='fm-weather-region';
    shortcuts(weather,[['选择地块','#fm-weather-fields'],['气象趋势','#fm-weather-trend'],['区域对比','#fm-weather-region']]);
-   disclosure(weather.querySelector(':scope > .wx-source-note'),'fm-weather-scope','教学气象 · 非真实天气预报');
-   const transfer=disclosure(weather.querySelector('.wx-heading-actions'),'fm-weather-transfer','共享气象与导入 / 导出');
-   if(transfer)$('#fm-weather-scope')?.after(transfer);
-   const settings=$('#wx-settings')?.closest('.wx-card');
-   // The frozen entry used a separate button to collapse this form. Native
-   // details now owns its visibility, so remove that earlier collapse state.
-   settings?.classList.remove('fm-settings-collapsed');$('#fm-settings-toggle')?.remove();
-   disclosure(settings,'fm-weather-settings','分析窗口与气象调节');
-   scrollHint($('#wx-fields'),'左右滑动选择示例地块');scrollHint($('#wx-outlook'),'左右滑动查看七天 · 点选日期联动趋势');
-   weather.querySelectorAll('.wx-table-scroll').forEach(node=>scrollHint(node,'左右滑动查看完整气象数据'));
+   const scope=disclosure(weather.querySelector(':scope > .wx-source-note'),'fm-weather-scope','气象来源与教学范围');
+   if(scope){for(const node of [weather.querySelector('.wx-main > .wx-source-note'),$('#wx-crop-note')])if(node)moveOnPhone(node,scope);moveOnPhone(scope,notes);}
+   const transfer=disclosure(weather.querySelector('.wx-heading-actions'),'fm-weather-transfer','共享气象与导入 / 导出');moveOnPhone(transfer,notes);
+   const settings=$('#wx-settings')?.closest('.wx-card');settings?.classList.remove('fm-settings-collapsed');$('#fm-settings-toggle')?.remove();
+   moveOnPhone(disclosure(settings,'fm-weather-settings','分析窗口与气象调节'),notes);
+   const actions=document.createElement('div');actions.className='fm-weather-shortcuts';
+   for(const [text,target]of [['分析设置','#fm-weather-settings'],['导入 / 导出','#fm-weather-transfer']]){const button=document.createElement('button');button.type='button';button.textContent=text;button.setAttribute('aria-controls',target.slice(1));button.addEventListener('click',()=>jump(target));actions.append(button);}
+   selection?.after(actions);
+   scrollHint($('#wx-outlook'),'左右滑动查看七天，点选日期联动趋势');weather.querySelectorAll('.wx-table-scroll').forEach(node=>scrollHint(node,'左右滑动查看完整气象数据'));
   }
-  // Collapse optional settings only when entering the phone layout. Once there,
-  // native details retain the visitor's own open/closed choices.
-  document.addEventListener('invalid',event=>{
-   if(!viewport.matches||!event.target.closest('#view-growth,#view-market,#view-weather'))return;
-   for(let parent=event.target.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;
-  },true);
-  const place=()=>disclosures.forEach(details=>{
-   if(viewport.matches&&details.contains(document.activeElement))details.querySelector(':scope > summary').focus({preventScroll:true});
-   details.open=!viewport.matches;
-  });place();viewport.addEventListener('change',place);
+  document.addEventListener('invalid',event=>{if(viewport.matches&&event.target.closest('#view-growth,#view-market,#view-weather'))reveal(event.target);},true);
+  const place=()=>{
+   for(const details of disclosures){if(viewport.matches&&details.contains(document.activeElement))details.querySelector(':scope > summary').focus({preventScroll:true});details.open=!viewport.matches;}
+   placements.forEach(move=>move());
+  };place();viewport.addEventListener('change',place);
+  document.documentElement.dataset.mobileLayout='20261027b';
  }
  function enhanceUI(attempt=0){
   const $=selector=>document.querySelector(selector),work=$('#view-work'),tabs=$('#tabs');

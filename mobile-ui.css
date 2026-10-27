@@ -92,129 +92,162 @@
 @media(prefers-contrast:more){.fm-shell{--muted:#2d4329;--line:#788c70}.fm-shell #tabs,.fm-shell #view-work .run-bar{border-color:#788c70}.fm-shell #tabs .tab{color:#30472b}}
 @media print{.fm-shell #tabs,.fm-shell #view-work .run-bar,.fm-steps,.fm-phone-badge{display:none!important}.fm-shell .wrap{padding:0}.fm-disclosure{break-inside:avoid}.fm-disclosure>summary{font-weight:700}}
 
-/* The remaining three hosted workspaces share the diagnosis phone language. */
-.fm-workspace-nav,.fm-scroll-hint{display:none}
+/* Phone workspaces: compact rows, full-width dates and results before editing. */
+.fm-workspace-nav,.fm-scroll-hint,.fm-module-meta,.fm-weather-shortcuts{display:none}
+.fm-workspace-notes:empty{display:none}
 .fm-workspace-disclosure{border:0;background:transparent;border-radius:0;margin:0 0 18px}
 .fm-workspace-disclosure>summary{display:none}
 .fm-workspace-disclosure>.gs-weather,.fm-workspace-disclosure>.wx-card{margin:0}
+.fm-row-label{font:inherit;color:inherit}
 @media(max-width:900px){
+ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+ .fm-shell .gs-modulebar{gap:8px;padding-top:9px;padding-bottom:9px}
+ .fm-shell .gs-modulebar>.brand{min-height:30px}.fm-shell .gs-modulebar .logo{width:28px;height:28px}
+ .fm-shell .gs-modulebar>div:not(.brand){border-radius:10px;padding:2px}
+ .fm-shell .gs-modulebar button{min-height:40px;font-size:13px;border-radius:8px}
+ .fm-shell:not(.fm-diagnosis) .wrap{padding-top:18px;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+ .fm-shell.gs-growth-mode .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
  .fm-shell :is(#view-growth,#view-market,#view-weather){min-width:0}
- .fm-shell :is(#gs-form,#gs-output,#fm-growth-data,#fm-market-parameters,#fm-market-results,#fm-market-quotes,#fm-weather-fields,#fm-weather-trend,#fm-weather-region){scroll-margin-top:0}
- .fm-shell .fm-workspace-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0 0 16px}
- .fm-shell .fm-workspace-nav button{min-height:44px;padding:8px 4px;border:1px solid #d5e0cd;border-radius:10px;background:#fdfef9;color:var(--green-2);font:inherit;font-size:13px;line-height:1.5;touch-action:manipulation;user-select:none;-webkit-user-select:none}
- .fm-shell .fm-workspace-nav button:disabled{opacity:.5;cursor:default}
- .fm-shell .fm-workspace-nav button:active{background:#e9f0df}
- .fm-shell .fm-workspace-nav button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
- .fm-shell .fm-workspace-disclosure{border:1px solid var(--line);border-radius:14px;background:#f8faf4;margin-bottom:16px}
- .fm-shell .fm-workspace-disclosure>summary{display:flex;min-height:48px;padding:12px 14px;font-size:13px;line-height:1.7;font-weight:550;touch-action:manipulation}
- .fm-shell .fm-workspace-disclosure[open]>summary{border-bottom:1px solid var(--line)}
- .fm-shell .fm-workspace-disclosure :is(.gs-notice,.mk-notice,.wx-source-note){border:0;border-radius:0;background:transparent;margin:0;padding:14px;font-size:13px;line-height:1.85}
- .fm-shell .fm-scroll-hint{display:block;font-size:12px;line-height:1.7;color:var(--muted);margin:12px 0 8px}
- .fm-shell :is(.gs-heading,.mk-heading,.wx-heading){display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px;margin:0 0 16px}
- .fm-shell :is(.gs-heading,.mk-heading,.wx-heading) h1{font-size:25px;line-height:1.4;letter-spacing:-.035em;margin:4px 0 7px}
+ .fm-shell :is(.gs-heading,.mk-heading,.wx-heading){display:block;margin:0 0 14px}
+ .fm-shell :is(.gs-heading,.mk-heading,.wx-heading) h1{font-size:25px;font-weight:650;line-height:1.35;letter-spacing:-.035em;margin:0 0 6px}
  .fm-shell :is(.gs-heading,.mk-heading,.wx-heading) p{font-size:13px;line-height:1.75;color:var(--muted);margin:0}
- .fm-shell :is(.gs-eyebrow,.mk-eyebrow,.wx-eyebrow){font-size:11px;letter-spacing:.06em}
- .fm-shell :is(.gs-badge,.wx-demo-badge){font-size:11px;line-height:1.5;max-width:100%}
- .fm-shell :is(.mk-card,.wx-card,.mk-kpi,.wx-kpi){padding:18px;border-radius:18px;border-color:var(--line);box-shadow:0 3px 12px #314a2304;margin-bottom:16px}
- .fm-shell :is(.gs-form h2,.gs-result-head h2,.mk h2,.wx-section-top h2){font-size:17px;line-height:1.5}
- .fm-shell :is(.gs-layout,.mk-layout,.wx-layout){grid-template-columns:minmax(0,1fr);gap:16px;margin-top:0}
- .fm-shell :is(.gs-fields input,.gs-climate-number input,.gs-chart-head .select-trigger,.wx input[type=date],.wx-control input[type=number],.wx .select-trigger){font-size:16px;min-height:48px;background:#fafcf8;border-color:#d4dfcc;border-radius:10px}
- .fm-shell :is(.gs-fields label,.gs-chart-head label){font-size:13px;min-width:0}
- .fm-shell :is(.gs-fields,.gs-summary,.gs-snapshot){grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px}
- .fm-shell .gs-fields input[type=date]{width:100%;min-width:0;max-width:100%}
- .fm-shell .gs-fields .select-trigger{min-height:48px}
- .fm-shell #fm-growth-weather{margin-top:18px}
- .fm-shell #fm-growth-weather>.gs-weather{padding:14px;border:0;background:transparent;border-radius:0}
- .fm-shell .gs-weather-heading{flex-wrap:wrap}
- .fm-shell :is(.gs-muted,.gs-field-help,.gs-climate-help,#gs-weather-label,#gs-status){font-size:13px;line-height:1.8;overflow-wrap:anywhere}
+ .fm-shell :is(.gs-eyebrow,.mk-eyebrow,.wx-eyebrow,.gs-heading>.gs-badge){display:none}
+ .fm-shell .fm-module-meta{display:block;margin-top:5px;color:#697b60;font-size:11px;line-height:1.7}
+ .fm-shell .fm-workspace-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-bottom:1px solid var(--line);margin:0 0 18px}
+ .fm-shell .fm-workspace-nav button{border:0;border-radius:0;background:transparent;color:#697b60;min-width:0;min-height:44px;padding:8px 4px;font:inherit;font-size:13px;line-height:1.5;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+ .fm-shell .fm-workspace-nav button[aria-current]{color:var(--green-2);box-shadow:inset 0 -2px var(--green);font-weight:600}
+ .fm-shell .fm-workspace-nav button:disabled{opacity:.45;cursor:default}
+ .fm-shell .fm-workspace-nav button:active{background:#edf2e7}
+ .fm-shell :is(#gs-form,#gs-output,#fm-growth-data,#fm-market-parameters,#fm-market-results,#fm-market-quotes,#fm-weather-fields,#fm-weather-trend,#fm-weather-region,.fm-workspace-disclosure){scroll-margin-top:0}
+ .fm-shell :is(.gs-layout,.wx-layout){grid-template-columns:minmax(0,1fr);gap:16px;margin-top:0}
+ .fm-shell :is(.gs-layout .card,.mk-card,.wx-card,.mk-kpi,.wx-kpi){padding:16px;border:1px solid var(--line);border-radius:16px;box-shadow:none;margin-bottom:16px;background:#fff}
+ .fm-shell :is(.gs-form h2,.gs-result-head h2,.mk h2,.wx-section-top h2){font-size:17px;font-weight:600;line-height:1.5}
+ .fm-shell .gs-form h2{margin:0 0 8px}
+ .fm-shell .gs-fields{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+ .fm-shell .gs-fields>label{display:grid;grid-template-columns:88px minmax(0,1fr);gap:10px;align-items:center;min-width:0;margin:0;padding:7px 0;border-bottom:1px solid #edf0e9;min-height:58px;font-size:14px;color:var(--text)}
+ .fm-shell .gs-fields .gs-full{grid-column:auto}
+ .fm-shell .gs-fields>.fm-date-row{grid-template-columns:minmax(0,1fr);gap:7px;padding:10px 0}
+ .fm-shell .gs-fields :is(input,.select-trigger){width:100%;min-width:0;max-width:100%;height:46px;min-height:46px;box-sizing:border-box;background:#f7f9f4;border:1px solid #dce4d5;border-radius:9px;padding:9px 11px;font-size:16px;line-height:24px}
+ .fm-shell :is(.gs-fields .select-control,.gs-unit-field){min-width:0;max-width:100%;width:100%;margin:0}
+ .fm-shell .gs-unit-field{display:flex;align-items:center;position:relative}
+ .fm-shell .gs-unit-field input{padding-right:34px}.fm-shell .gs-unit-field>span{right:12px;font-size:13px;pointer-events:none}
+ .fm-shell #gs-start{display:block;-webkit-appearance:none;appearance:none;box-sizing:border-box;width:100%;min-width:0;max-width:100%;min-inline-size:0;max-inline-size:100%;height:48px;min-height:48px;max-height:48px;padding:11px 12px;line-height:24px;font-size:16px;text-align:left}
+ .fm-shell input[type=date]::-webkit-date-and-time-value{min-height:24px;text-align:left}
+ .fm-shell #fm-growth-weather{margin:14px 0 0}
+ .fm-shell #fm-growth-weather>.gs-weather{padding:14px 0 0;border:0;background:transparent;margin:0;border-radius:0}
+ .fm-shell .fm-growth-extra{padding:0 2px 8px}
+ .fm-shell .fm-growth-extra>label{display:block;font-size:13px;line-height:1.8;margin:10px 0}
+ .fm-shell .fm-growth-extra input{display:block;box-sizing:border-box;width:100%;min-height:46px;font-size:16px;padding:9px 11px;border:1px solid #d4dfcc;border-radius:9px;background:#f7f9f4}
+ .fm-shell .fm-growth-extra :is(small,p){font-size:12px;line-height:1.8;margin:8px 0;color:var(--muted)}
+ .fm-shell .gs-weather-heading{flex-wrap:wrap}.fm-shell :is(.gs-muted,.gs-climate-help,#gs-weather-label,#gs-status){font-size:12px;line-height:1.8;overflow-wrap:anywhere}
+ .fm-shell .gs-climate-number input{min-height:46px;font-size:16px}
  .fm-shell .gs-weather-links{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
- .fm-shell .gs-weather-links :is(button,label){font-size:13px;min-height:44px;margin:0;justify-content:center;text-align:center}
- .fm-shell .gs-run{width:100%;min-height:50px;font-size:15px;border-radius:11px;margin-top:14px}
- .fm-shell .gs-empty{min-height:140px;padding:22px 16px;text-align:left}
- .fm-shell .gs-empty>span{font-size:18px}.fm-shell .gs-empty p{font-size:13px;line-height:1.8}
- .fm-shell .gs-result-head{flex-wrap:wrap;gap:10px}
- .fm-shell .gs-result-head h2{min-width:0;overflow-wrap:anywhere}
+ .fm-shell .gs-weather-links :is(button,label){min-height:44px;margin:0;font-size:13px;text-align:center;justify-content:center}
+ .fm-shell .fm-growth-action{position:fixed;z-index:45;inset:auto 0 0;display:flex;background:#fcfdf8;border-top:1px solid #dce3d6;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+ .fm-shell .fm-growth-action .gs-run{width:100%;min-height:48px;font-size:15px;font-weight:550;line-height:1.6;border-radius:11px;margin:0}
+ .fm-shell.fm-editing .fm-growth-action{visibility:hidden;pointer-events:none}
+ .fm-shell .gs-empty{min-height:140px;padding:18px 16px;text-align:left}.fm-shell .gs-empty>span{font-size:17px}.fm-shell .gs-empty p{font-size:13px;line-height:1.8}
+ .fm-shell .gs-result-head{flex-wrap:wrap;gap:10px}.fm-shell .gs-result-head h2{min-width:0;overflow-wrap:anywhere}
  .fm-shell .gs-scenarios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
- .fm-shell .gs-scenarios button{min-width:0;min-height:48px;padding:8px 3px;font-size:12px;line-height:1.6;border-radius:10px}
- .fm-shell .gs-summary{padding-bottom:16px}.fm-shell .gs-summary>div{padding:6px 0}
- .fm-shell :is(.gs-summary span,.gs-snapshot span){font-size:12px;line-height:1.7}
+ .fm-shell .gs-scenarios button{min-width:0;min-height:48px;padding:8px 3px;font-size:12px;line-height:1.6;border-radius:9px}
+ .fm-shell :is(.gs-summary,.gs-snapshot){grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px}
+ .fm-shell .gs-summary{padding:10px 0 16px}.fm-shell :is(.gs-summary span,.gs-snapshot span){font-size:12px;line-height:1.7}
  .fm-shell .gs-summary strong{font-size:17px;line-height:1.6}.fm-shell .gs-snapshot strong{font-size:14px;line-height:1.7}
- .fm-shell .gs-chart-head{flex-wrap:wrap;align-items:center}.fm-shell .gs-chart-head>label{flex:1;min-width:160px}
+ .fm-shell .gs-chart-head{flex-wrap:wrap;align-items:center}.fm-shell .gs-chart-head>label{flex:1;min-width:160px}.fm-shell .gs-chart-head .select-trigger{min-height:46px;font-size:16px}
  .fm-shell .gs-chart-head>span{font-size:12px;max-width:none}
- .fm-shell .gs-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:8px}
- .fm-shell .gs-actions .btn{padding:9px 6px;font-size:12px;white-space:normal;min-height:44px}
+ .fm-shell .gs-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:8px}.fm-shell .gs-actions .btn{padding:9px 6px;font-size:12px;white-space:normal;min-height:44px}
  .fm-shell :is(.gs-climate-control input[type=range],.gs-day-control input,.wx input[type=range]){min-height:44px;touch-action:auto}
- .fm-shell :is(.gs-method summary,.wx-data summary){min-height:48px;font-size:14px;line-height:1.7}
  .fm-shell .gs-table-wrap{max-width:100%;min-width:0;overscroll-behavior:contain}
- .fm-shell .mk-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
- .fm-shell .mk-actions .btn{min-height:44px;font-size:13px}
- .fm-shell .mk-layout aside .mk-card{display:block}
- .fm-shell .fm-market-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px}
- .fm-shell .fm-market-field-group{min-width:0}
- .fm-shell .fm-market-field-group:has(#mk-price),.fm-shell .fm-market-field-group:has(#mk-rent){grid-column:1/-1}
- .fm-shell .mk-field{margin:0}.fm-shell .mk-field>span{flex-wrap:wrap;font-size:13px;gap:4px}
- .fm-shell .mk-field>small{font-size:12px;line-height:1.75}
- .fm-shell :is(.mk input,.mk .select-trigger){min-height:48px;background:#fafcf8;border-radius:10px}
- .fm-shell .mk-shortcuts{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
- .fm-shell .mk-shortcuts .btn{font-size:12px;min-height:44px}
- .fm-shell .mk-form-actions{grid-template-columns:minmax(0,1fr) auto;align-items:stretch;gap:8px}
- .fm-shell .mk-form-actions .btn{min-height:50px;padding:10px;font-size:13px;line-height:1.6;border-radius:11px}
- .fm-shell .mk-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
- .fm-shell .mk-kpi{padding:15px 12px;margin:0;min-width:0}
- .fm-shell .mk-kpi>strong{font-size:27px;line-height:1.5;margin-top:10px;overflow-wrap:anywhere}
- .fm-shell .mk-kpi p{font-size:12px;line-height:1.7}.fm-shell .mk-result-heading h2{font-size:21px}
- .fm-shell .mk-rating-grid{grid-template-columns:minmax(0,1fr);gap:0}
- .fm-shell .mk-rating-grid dl{grid-template-columns:auto minmax(0,1fr)}.fm-shell .mk-rating-grid dd{text-align:right;overflow-wrap:anywhere}
+ .fm-shell .fm-workspace-disclosure{border:0;border-top:1px solid #dfe6d8;border-bottom:1px solid #dfe6d8;border-radius:0;background:transparent;margin:0 0 12px}
+ .fm-shell .fm-workspace-disclosure>summary{display:flex;min-height:48px;padding:11px 2px;font-size:13px;font-weight:500;line-height:1.8;touch-action:manipulation;gap:8px}
+ .fm-shell .fm-workspace-disclosure[open]>summary{border-bottom:1px solid #e5eadf}
+ .fm-shell .fm-workspace-disclosure :is(.gs-notice,.mk-notice,.wx-source-note){border:0;border-radius:0;background:transparent;margin:0;padding:12px 2px;font-size:12px;line-height:1.9}
+ .fm-shell .fm-workspace-notes{margin-top:18px}
+ .fm-shell .fm-scroll-hint{display:block;font-size:12px;line-height:1.7;color:var(--muted);margin:10px 0 7px}
+ .fm-shell .mk-layout{display:flex;flex-direction:column;gap:0;margin-top:0}
+ .fm-shell .mk-main{display:contents}
+ .fm-shell .mk-main>section{order:4;width:100%}
+ .fm-shell .mk-main>.mk-result-heading{order:0;margin-bottom:12px}
+ .fm-shell .mk-main>#mk-kpis{order:1}
+ .fm-shell .mk-layout>aside{order:2;width:100%;margin-bottom:16px}
+ .fm-shell .mk-result-heading h2{font-size:16px;font-weight:600}.fm-shell .mk-result-heading>span{font-size:11px}
+ .fm-shell .mk-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+ .fm-shell .mk-kpi{margin:0;padding:15px;min-width:0}
+ .fm-shell .mk-kpi>span{font-size:12px}.fm-shell .mk-kpi>strong{font-size:27px;line-height:1.5;margin-top:6px;overflow-wrap:anywhere}.fm-shell .mk-kpi p{font-size:12px;line-height:1.75}
+ .fm-shell .mk-kpi:first-child{grid-column:1/-1;background:#edf4e6;border-color:#d3e0c8;padding:18px}
+ .fm-shell .mk-kpi:first-child>strong{font-size:38px;font-weight:650;line-height:1.4;letter-spacing:-.04em;margin:4px 0 0}
+ .fm-shell .mk-kpi:first-child>small{display:inline;font-size:12px}.fm-shell .mk-kpi:first-child p{margin-top:5px}
+ .fm-shell .mk-kpi:last-child{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;align-items:center}
+ .fm-shell .mk-kpi:last-child>strong{font-size:22px;grid-column:2;grid-row:1/3;margin:0;text-align:right}
+ .fm-shell .mk-kpi:last-child p{grid-column:1/-1;margin-top:3px}
+ .fm-shell .fm-market-editor{background:#fff;border:1px solid var(--line);border-radius:14px;margin:0}
+ .fm-shell .fm-market-editor>summary{padding:14px 16px;font-size:14px;font-weight:550;flex-wrap:wrap;gap:2px 10px}
+ .fm-shell #fm-market-context{font-size:12px;line-height:1.6;font-weight:400;color:var(--muted);margin-left:auto}
+ .fm-shell .fm-market-editor>.mk-card{padding:4px 16px 16px;border:0;border-radius:0 0 14px 14px;margin:0;box-shadow:none}
+ .fm-shell .mk-layout aside .mk-card{display:block}.fm-shell #fm-market-parameters>h2{display:none}
+ .fm-shell .fm-market-fields{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+ .fm-shell .fm-market-field-group{min-width:0;grid-column:1/-1;border-bottom:1px solid #edf0e9;padding:7px 0}
+ .fm-shell .mk-field{display:grid;grid-template-columns:88px minmax(0,1fr);align-items:center;gap:10px;min-width:0;margin:0;min-height:46px}
+ .fm-shell .mk-field>span{display:flex;align-items:baseline;justify-content:flex-start;gap:2px 5px;flex-wrap:wrap;font-size:13px;line-height:1.6;margin:0}
+ .fm-shell .mk-field>span>small{font-size:11px;color:var(--muted);font-weight:400}
+ .fm-shell .mk-field>.select-control{min-width:0;width:100%}
+ .fm-shell :is(.mk input,.mk .select-trigger){box-sizing:border-box;width:100%;min-width:0;max-width:100%;min-height:46px;height:46px;padding:9px 11px;font-size:16px;line-height:24px;background:#f7f9f4;border:1px solid #dce4d5;border-radius:9px}
+ .fm-shell .mk-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
+ .fm-shell .mk-shortcuts .btn{font-size:12px;min-height:44px;border-color:transparent;border-radius:8px;background:#f2f5ed;color:#4c6743;padding:8px 3px}
+ .fm-shell #mk-quote{display:block;width:100%;font-size:12px;min-height:44px;margin:3px 0 0;padding:8px;border-color:transparent;background:transparent;text-align:right}
+ .fm-shell #mk-quote:disabled{display:none}
+ .fm-shell .mk-form-actions{grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:16px}
+ .fm-shell .mk-form-actions .btn{min-height:48px;padding:9px 12px;font-size:13px;line-height:1.6;border-radius:10px}
+ .fm-shell .mk-form-actions+.mk-muted{font-size:11px;line-height:1.8}
+ .fm-shell .fm-parameter-help{margin:10px 0 0}.fm-shell .fm-help-body{padding:4px 2px 12px}
+ .fm-shell .fm-help-body section{margin:10px 0}.fm-shell .fm-help-body strong{display:block;font-size:12px;font-weight:550}
+ .fm-shell .fm-help-body :is(small,p){display:block;font-size:12px;line-height:1.9;margin:4px 0;color:var(--muted)}
+ .fm-shell .mk-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px 0}
+ .fm-shell .mk-rating-grid{grid-template-columns:minmax(0,1fr);gap:0}.fm-shell .mk-rating-grid dl{grid-template-columns:auto minmax(0,1fr)}.fm-shell .mk-rating-grid dd{text-align:right;overflow-wrap:anywhere}
  .fm-shell .mk-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}
  .fm-shell :is(.mk-market-top,.mk-policy-grid,.mk-quotes){grid-template-columns:minmax(0,1fr)}
  .fm-shell .mk-section-heading{flex-wrap:wrap;gap:6px}.fm-shell .mk-section-heading h2{margin-bottom:0}
- .fm-shell .mk-price-line{grid-template-columns:76px minmax(0,1fr);gap:8px}.fm-shell .mk-price-line strong{grid-column:2;text-align:left}
- .fm-shell .mk-method p{font-size:13px;line-height:1.85}
- .fm-shell .wx-heading-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:8px}
- .fm-shell .wx-heading-actions .wx-demo-badge{grid-column:1/-1;justify-self:start}
- .fm-shell .wx-heading-actions #wx-share-growth{grid-column:1/-1;grid-row:2;background:var(--green-soft);color:var(--green-2)}
- .fm-shell .wx-heading-actions :is(button,label){min-height:44px;padding:9px 8px;font-size:13px;line-height:1.7;text-align:center;justify-content:center;border-radius:10px}
- .fm-shell .wx-sidebar{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
- .fm-shell .wx-sidebar .wx-card{margin-bottom:16px;padding:16px}
- .fm-shell #fm-weather-settings>.wx-card{border:0;border-radius:0;background:transparent;box-shadow:none;margin:0;padding:0 14px 14px}
- .fm-shell #fm-weather-settings>.wx-card>.wx-section-top{display:none}
- .fm-shell #wx-fields{display:flex;gap:8px;max-width:100%;overflow-x:auto;padding:2px 2px 9px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;scrollbar-width:thin}
- .fm-shell .wx-field{flex:0 0 148px;min-width:0;min-height:78px;padding:12px;margin:0;background:#f8faf4;border:1px solid #dce4d5;scroll-snap-align:start}
- .fm-shell .wx-field strong{font-size:13px}.fm-shell .wx-field small{font-size:12px;line-height:1.6}
- .fm-shell :is(.wx-field-icon,.wx-field-arrow){display:none}
- .fm-shell .wx-field[aria-pressed=true]{background:#e9f0df;border-color:#92ae7d}
- .fm-shell .wx-field-heading{flex-wrap:wrap;align-items:flex-start;gap:9px;margin-bottom:14px}
- .fm-shell .wx-field-heading h2{font-size:22px}.fm-shell .wx-field-heading>span{font-size:12px;line-height:1.7;text-align:left}
- .fm-shell .wx-main>.wx-source-note{font-size:13px;line-height:1.8;padding:12px 14px;border-radius:12px}
+ .fm-shell .mk-price-line{grid-template-columns:76px minmax(0,1fr);gap:8px}.fm-shell .mk-price-line strong{grid-column:2;text-align:left}.fm-shell .mk-method p{font-size:13px;line-height:1.85}
+ .fm-shell .wx-sidebar{display:block}.fm-shell .wx-sidebar .wx-card{margin:0;padding:14px}
+ .fm-shell #fm-weather-fields .wx-section-top{margin-bottom:10px;gap:4px;align-items:center}
+ .fm-shell #fm-weather-fields .wx-section-top h2{font-size:15px}.fm-shell #fm-weather-fields .wx-section-top>span{font-size:11px}
+ .fm-shell #fm-weather-fields>p.wx-subtle{display:none}
+ .fm-shell #wx-fields{display:flex;gap:8px;max-width:100%;overflow-x:auto;padding:1px 1px 7px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;scrollbar-width:thin}
+ .fm-shell .wx-field{flex:0 0 142px;min-width:0;min-height:70px;padding:10px 12px;margin:0;background:#f7f9f4;border:1px solid #dce4d5;border-radius:10px;scroll-snap-align:start}
+ .fm-shell .wx-field strong{font-size:13px}.fm-shell .wx-field small{font-size:11px;line-height:1.6;margin-top:3px}
+ .fm-shell :is(.wx-field-icon,.wx-field-arrow){display:none}.fm-shell .wx-field[aria-pressed=true]{background:#e9f0df;border-color:#92ae7d}
+ .fm-shell .fm-weather-shortcuts{display:flex;justify-content:flex-end;gap:12px;margin-top:2px}
+ .fm-shell .fm-weather-shortcuts button{border:0;background:transparent;color:var(--green-2);font:inherit;font-size:12px;line-height:1.6;min-height:44px;padding:8px 2px}
+ .fm-shell .wx-field-heading{flex-wrap:wrap;align-items:flex-start;gap:6px;margin-bottom:12px}
+ .fm-shell .wx-field-heading h2{font-size:20px;margin:4px 0 0}.fm-shell .wx-field-heading>div>span{font-size:11px}
+ .fm-shell .wx-field-heading>span{font-size:11px;line-height:1.6;text-align:left;padding:4px 7px}
  .fm-shell .wx-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
- .fm-shell .wx-kpi{margin:0;padding:15px 12px;min-width:0}.fm-shell .wx-kpi strong{font-size:29px;margin-top:10px;overflow-wrap:anywhere}
- .fm-shell .wx-kpi p{font-size:12px;line-height:1.7}.fm-shell .wx-kpi-label{font-size:12px}
+ .fm-shell .wx-kpi{margin:0;padding:14px;min-width:0}.fm-shell .wx-kpi strong{font-size:29px;margin:7px 0 3px;overflow-wrap:anywhere}.fm-shell .wx-kpi p{font-size:11px;line-height:1.7}
+ .fm-shell .wx-kpi-label{font-size:12px;gap:5px}.fm-shell .wx-kpi-label svg{width:17px;height:17px}
  .fm-shell .wx-section-top{flex-wrap:wrap;gap:10px}.fm-shell .wx-section-top>div{min-width:0}
- .fm-shell .wx-chart-select{width:100%;justify-content:space-between;font-size:13px;gap:10px}
- .fm-shell .wx-chart-select .select-control{width:165px;min-width:0}
+ .fm-shell .wx-chart-select{width:100%;justify-content:space-between;font-size:13px;gap:10px}.fm-shell .wx-chart-select .select-control{width:165px;min-width:0}
+ .fm-shell :is(.wx input[type=date],.wx-control input[type=number],.wx .select-trigger){box-sizing:border-box;min-height:46px;font-size:16px;background:#f7f9f4;border-color:#d4dfcc;border-radius:9px}
+ .fm-shell #wx-anchor{-webkit-appearance:none;appearance:none;box-sizing:border-box;width:100%;min-width:0;min-inline-size:0;height:48px;max-width:100%;padding:11px 12px;line-height:24px}
  .fm-shell .wx-detail-grid,.fm-shell .wx-region-grid{grid-template-columns:minmax(0,1fr);gap:0}
  .fm-shell .wx-outlook{display:flex;overflow-x:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;gap:8px;padding:2px 2px 10px}
- .fm-shell .wx-outlook button{flex:0 0 88px;min-height:205px;scroll-snap-align:start}
- .fm-shell .wx-outlook strong{font-size:23px}.fm-shell :is(.wx-outlook small,.wx-day-risk,.wx-window){font-size:11px}
+ .fm-shell .wx-outlook button{flex:0 0 86px;min-height:205px;scroll-snap-align:start}.fm-shell .wx-outlook strong{font-size:23px}.fm-shell :is(.wx-outlook small,.wx-day-risk,.wx-window){font-size:11px}
  .fm-shell .wx-totals{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}
- .fm-shell :is(.wx-subtle,.wx-risk-item p,.wx-window-note,.wx-status){font-size:13px;line-height:1.8}
+ .fm-shell :is(.wx-subtle,.wx-risk-item p,.wx-window-note,.wx-status){font-size:12px;line-height:1.8}
+ .fm-shell #fm-weather-settings>.wx-card{border:0;border-radius:0;background:transparent;box-shadow:none;margin:0;padding:0 0 14px}
+ .fm-shell #fm-weather-settings>.wx-card>.wx-section-top{display:none}
+ .fm-shell #fm-weather-transfer .wx-heading-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;padding:12px 0;width:100%}
+ .fm-shell #fm-weather-transfer .wx-demo-badge{display:none}.fm-shell #fm-weather-transfer #wx-share-growth{grid-column:1/-1;grid-row:1;background:var(--green-soft);color:var(--green-2)}
+ .fm-shell .wx-heading-actions :is(button,label){min-height:44px;padding:9px 8px;font-size:13px;line-height:1.7;text-align:center;justify-content:center;border-radius:9px}
  .fm-shell .wx-data-heading .btn{width:100%;font-size:13px}
  .fm-shell :is(.mk-table-scroll,.mk-chart-scroll,.wx-table-scroll){max-width:100%;min-width:0;overscroll-behavior:contain}
- .fm-shell :is(.wx th,.wx table,.wx td button){font-size:12px}.fm-shell .wx td button{min-height:44px}
- .fm-shell .wx-region-grid #wx-map{margin-bottom:16px}
+ .fm-shell :is(.wx th,.wx table,.wx td button){font-size:12px}.fm-shell .wx td button{min-height:44px}.fm-shell .wx-region-grid #wx-map{margin-bottom:16px}
 }
 @media(max-width:359px){
  .fm-shell :is(.gs-heading,.mk-heading,.wx-heading) h1{font-size:23px}
- .fm-shell .gs-fields,.fm-shell .fm-market-fields{grid-template-columns:minmax(0,1fr)}
- .fm-shell .mk-kpi>strong{font-size:24px}.fm-shell .wx-kpi strong{font-size:26px}
- .fm-shell .fm-workspace-nav button{font-size:12px}
+ .fm-shell .gs-fields>label,.fm-shell .mk-field{grid-template-columns:78px minmax(0,1fr);gap:8px}
+ .fm-shell .gs-fields>.fm-date-row{grid-template-columns:minmax(0,1fr)}
+ .fm-shell .mk-kpi>strong{font-size:25px}.fm-shell .mk-kpi:first-child>strong{font-size:34px}.fm-shell .mk-kpi:last-child>strong{font-size:19px}
+ .fm-shell .wx-kpi strong{font-size:26px}.fm-shell .fm-workspace-nav button{font-size:12px}
 }
-@media(hover:hover) and (pointer:fine){.fm-shell .fm-workspace-nav button:not(:disabled):hover{background:#edf3e6}}
-@media print{.fm-workspace-nav,.fm-scroll-hint,.fm-workspace-disclosure>summary{display:none!important}.fm-workspace-disclosure{border:0;margin:0}.fm-workspace-disclosure> :not(summary){display:block!important}}
-
-@media(max-width:900px){
- .fm-shell #fm-weather-transfer .wx-heading-actions{margin:0;padding:14px;width:100%}
- .fm-shell #fm-weather-transfer .wx-demo-badge{display:none}
- .fm-shell #fm-weather-transfer #wx-share-growth{grid-row:1}
- .fm-shell .mk-kpi:last-child>strong{font-size:clamp(16px,4vw,20px);line-height:1.7}
-}
+@media(hover:hover) and (pointer:fine){.fm-shell .fm-workspace-nav button:not(:disabled):hover,.fm-shell .fm-weather-shortcuts button:hover{background:#edf3e6}}
+@media print{.fm-workspace-nav,.fm-scroll-hint,.fm-workspace-disclosure>summary,.fm-growth-action,.fm-weather-shortcuts{display:none!important}.fm-workspace-disclosure{border:0;margin:0}.fm-workspace-disclosure>:not(summary){display:block!important}}
