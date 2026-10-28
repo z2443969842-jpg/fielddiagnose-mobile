@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#f5f6f0"><meta name="robots" content="noindex"><title>更新界面 · 田野工坊</title>
+<style>
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{margin:0;background:#f5f6f0;color:#20392a;font:16px/1.8 system-ui,-apple-system,"Microsoft YaHei",sans-serif;min-height:100svh;display:grid;place-items:center;padding:24px max(20px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left))}main{width:min(100%,440px);background:#fff;border:1px solid #dce3d8;border-radius:20px;padding:28px 24px}.brand{font-size:13px;color:#566952;margin:0 0 24px}h1{font-size:25px;font-weight:650;line-height:1.4;letter-spacing:-.03em;margin:0 0 12px}p{margin:12px 0}#update-status{min-height:58px;color:#566952}#update-error{color:#9c4637}.note{font-size:13px;color:#62745b;border-top:1px solid #e5eadf;padding-top:16px;margin-top:24px}button,a{font:inherit;touch-action:manipulation}button,.button{display:block;width:100%;min-height:48px;border:1px solid #2d6343;background:#2d6343;color:#fff;border-radius:11px;padding:10px 14px;text-align:center;text-decoration:none;cursor:pointer}.button.secondary{background:#fff;color:#2d6343;margin-top:10px}button:focus-visible,a:focus-visible{outline:3px solid #2d6343;outline-offset:3px}[hidden]{display:none!important}
+</style></head><body><main><p class="brand">田野工坊 · 手机界面更新</p><h1 id="update-title">正在获取新版界面</h1><p id="update-status" role="status" aria-live="polite">请保持页面打开，完成后会自动进入。</p><p id="update-error" role="alert" hidden></p><button id="retry-update" type="button" hidden>重新尝试</button><a id="open-app" class="button secondary" hidden>打开新版界面</a><p class="note">本次更新保留当前浏览器中的病例和照片，无需清除网站数据。</p><noscript><p>请在浏览器中启用 JavaScript 后重试。</p></noscript></main>
+<script>
+(()=>{'use strict';
+ const $=id=>document.getElementById(id),base=new URL('./',location.href);let running=false;
+ const state=(name,text)=>{document.documentElement.dataset.updateState=name;$('update-status').textContent=text;};
+ const local=url=>{const value=new URL(url,base);if(value.origin!==base.origin||!value.pathname.startsWith(base.pathname))throw Error('Invalid update path');return value;};
+ const deadline=(promise,ms)=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Update timeout')),ms);Promise.resolve(promise).then(value=>{clearTimeout(timer);resolve(value);},error=>{clearTimeout(timer);reject(error);});});
+ async function bytes(url,signal){const response=await fetch(local(url),{cache:'reload',signal});if(!response.ok)throw Error('Download interrupted');return new Uint8Array(await response.arrayBuffer());}
+ async function verify(release,signal){
+  if(release.schema!==1||!/^[a-f0-9]{12}$/.test(release.version)||!Array.isArray(release.files)||release.files.length<3)throw Error('Invalid update metadata');
+  const entry=local(release.entry);if(entry.pathname!==new URL('index.html',base).pathname||entry.searchParams.get('app')!==release.version||!release.files.some(file=>file.url===release.entry)||!release.files.some(file=>file.url===release.runtime))throw Error('Invalid entry');
+  let next=0,done=0;
+  const worker=async()=>{while(next<release.files.length){const file=release.files[next++];if(!/^[a-f0-9]{64}$/.test(file.sha256)||!Number.isSafeInteger(file.bytes)||file.bytes<0)throw Error('Invalid integrity');const body=await bytes(file.url,signal);if(body.length!==file.bytes)throw Error('Incomplete interface download');const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',body)),value=>value.toString(16).padStart(2,'0')).join('');if(hash!==file.sha256)throw Error('Interface version mismatch');state('verifying','正在准备新版界面（'+(++done)+' / '+release.files.length+'）…');}};
+  await Promise.all(Array.from({length:Math.min(3,release.files.length)},worker));return entry;
+ }
+ function version(worker){return new Promise(resolve=>{if(!worker)return resolve(null);const channel=new MessageChannel(),timer=setTimeout(()=>{channel.port1.close();resolve(null);},700);channel.port1.onmessage=event=>{clearTimeout(timer);channel.port1.close();resolve(event.data?.version||null);};worker.postMessage({type:'GET_VERSION'},[channel.port2]);});}
+ async function activate(release){
+  if(!('serviceWorker'in navigator)||!isSecureContext)return;
+  await deadline((async()=>{
+   const registration=await navigator.serviceWorker.register(new URL('sw.js',base),{scope:base.pathname,updateViaCache:'none'});
+   if(await version(navigator.serviceWorker.controller)===release.version)return;
+   await registration.update();
+   const attempt=()=>{if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});};attempt();
+   await new Promise(resolve=>{
+    let finished=false;const finish=()=>{if(finished)return;finished=true;clearInterval(poll);navigator.serviceWorker.removeEventListener('controllerchange',changed);resolve();};
+    const changed=()=>{version(navigator.serviceWorker.controller).then(value=>{if(value===release.version)finish();});};
+    const poll=setInterval(()=>{attempt();changed();},250);navigator.serviceWorker.addEventListener('controllerchange',changed);changed();
+    setTimeout(finish,18000);
+   });
+  })(),20000).catch(()=>{});
+ }
+ async function run(){
+  if(running)return;running=true;$('retry-update').hidden=true;$('open-app').hidden=true;$('update-error').hidden=true;$('update-title').textContent='正在获取新版界面';state('checking','正在检查可用更新…');
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),120000);
+  try{
+   const url=new URL('release.json',base);url.searchParams.set('t',String(Date.now()));const response=await fetch(url,{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('Update unavailable');const release=await response.json();
+   const entry=await verify(release,controller.signal);clearTimeout(timer);state('activating','界面已准备好，正在完成更新…');await activate(release);
+   $('open-app').href=entry.href;$('open-app').hidden=false;$('update-title').textContent='新版界面已就绪';state('ready','正在打开，原有病例会继续保留。');location.replace(entry.href);
+  }catch(error){controller.abort();clearTimeout(timer);$('update-title').textContent='本次更新未完成';state('failed','请保持联网后重试。原有病例和照片没有被删除。');$('update-error').textContent='界面下载或校验未完成，暂未切换版本。';$('update-error').hidden=false;$('retry-update').hidden=false;}
+  finally{running=false;}
+ }
+ $('retry-update').addEventListener('click',run);run();
+})();
+</script></body></html>

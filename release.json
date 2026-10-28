@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "version": "e01d87bf79cb",
+  "entry": "./index.html?app=e01d87bf79cb",
+  "runtime": "./mobile-site.5bf6fd49d7a3.js",
+  "policy": "network-first-v1",
+  "layout": "20261027b",
+  "files": [
+    {
+      "name": "index.html",
+      "url": "./index.html?app=e01d87bf79cb",
+      "bytes": 3178757,
+      "sha256": "6ae7bb853f89ec2f58cca14abc15b8fb223f7bb01e157b8a303b3eedf0ba83f3"
+    },
+    {
+      "name": "mobile-config.3eeea7efca00.js",
+      "url": "./mobile-config.3eeea7efca00.js",
+      "sha256": "3eeea7efca0049df45d20b059726b4351ddc1804823e5024bd787c71e051258d",
+      "bytes": 19580
+    },
+    {
+      "name": "mobile-assets.fdcc873a870c.js",
+      "url": "./mobile-assets.fdcc873a870c.js",
+      "sha256": "fdcc873a870cfed61522d2f4e039bb2f78e6c1cc8cea9050fad75abc509c8f89",
+      "bytes": 4054
+    },
+    {
+      "name": "mobile-site.5bf6fd49d7a3.js",
+      "url": "./mobile-site.5bf6fd49d7a3.js",
+      "sha256": "5bf6fd49d7a3a183ab6127e6c4e6af28e029ab12ccdf5171a91f36b9c3b3ead1",
+      "bytes": 24032
+    },
+    {
+      "name": "mobile-ui.4a85c8ed82fe.css",
+      "url": "./mobile-ui.4a85c8ed82fe.css",
+      "sha256": "4a85c8ed82fefe3efb0104f896e028d33cd650e3cb183e6df97977b96b76bff0",
+      "bytes": 31770
+    }
+  ]
+}

@@ -1,6 +1,39 @@
 /* Hosted phone entry; data and inference stay in the visitor's browser. */
 (() => {
  'use strict';
+ const loadedRuntime=document.currentScript?.src;
+ function setupHostedUpdates(){
+  let checkedAt=0,checking=false,registration=null;
+  const show=release=>{
+   let banner=document.getElementById('fm-version-update');
+   if(!banner){
+    banner=document.createElement('section');banner.id='fm-version-update';banner.className='fm-version-update';banner.setAttribute('role','status');
+    const text=document.createElement('span');text.textContent='新版界面已就绪，完成当前操作后可更新。';
+    const link=document.createElement('a');link.className='btn primary';link.textContent='更新并打开';banner.append(text,link);
+    const header=document.getElementById('fd-chrome');if(header)header.after(banner);else document.body.prepend(banner);
+   }
+   const destination=new URL('./update.html',location.href);if(release?.version)destination.searchParams.set('release',release.version);
+   banner.querySelector('a').href=destination.href;
+  };
+  const watch=value=>{
+   registration=value;if(value.waiting)show();
+   const installing=worker=>{if(worker)worker.addEventListener('statechange',()=>{if(worker.state==='installed'&&value.waiting)show();});};
+   installing(value.installing);value.addEventListener('updatefound',()=>installing(value.installing));
+  };
+  const check=async()=>{
+   if(checking||navigator.onLine===false||Date.now()-checkedAt<60000)return;
+   checkedAt=Date.now();checking=true;
+   try{
+    const url=new URL('./release.json',location.href);url.searchParams.set('t',String(checkedAt));
+    const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!response.ok)return;const release=await response.json();
+    const available=new URL(release.runtime,location.href),loaded=new URL(loadedRuntime||'./mobile-site.js',location.href);
+    if(available.origin===location.origin&&available.pathname!==loaded.pathname)show(release);
+    if('serviceWorker'in navigator){const value=await navigator.serviceWorker.getRegistration();if(value&&value!==registration)watch(value);if(value)await value.update();}
+   }catch(error){/* Keep the current usable page when discovery is offline. */}
+   finally{checking=false;}
+  };
+  setTimeout(check,1500);window.addEventListener('online',check);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check();});
+ }
  const boot=()=>{
   document.querySelector('#gs-diagnose')?.click();
   const work=document.querySelector('#view-work');
@@ -15,6 +48,7 @@
   const generate=document.querySelector('#rag-generate');if(generate){generate.disabled=true;generate.textContent='文字模型：电脑版可用';}
   // The existing page finishes its enhancements in DOMContentLoaded timers.
   requestAnimationFrame(()=>enhanceUI());
+  setupHostedUpdates();
  };
  const icon=name=>{
   const paths={camera:'<path d="M14.5 4h-5L8 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-4.5Z"/><circle cx="12" cy="13" r="4"/>',photo:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5L5 21"/>',work:'<path d="M12 21v-9M12 16C4 16 3 10 3 5c6 0 9 3 9 7M12 12c0-5 3-8 9-8 0 5-1 9-9 9"/>',kb:'<path d="M12 5v16M12 6C9 4 5 4 2 5v14c3-1 7-1 10 1 3-2 7-2 10-1V5c-3-1-7-1-10 1Z"/>',atlas:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1"/><path d="m3 17 5-5 4 4 4-6 5 7"/>',history:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h4"/>',settings:'<circle cx="12" cy="12" r="4"/><path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3Z"/>'};
